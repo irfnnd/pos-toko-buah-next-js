@@ -1,0 +1,230 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  KASIR
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum FruitStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum ExpiryStatus {
+  AMAN
+  SEGERA_BATAS
+  MELEWATI_BATAS
+  HABIS
+}
+
+enum MovementType {
+  IN
+  OUT_SALE
+  OUT_EXPIRED
+  OUT_DAMAGED
+  OUT_ADJUSTMENT
+}
+
+enum PaymentMethod {
+  CASH
+  QRIS
+  TRANSFER
+  OTHER
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELLED
+}
+
+enum NotificationType {
+  EXPIRY_WARNING
+  EXPIRED
+  LOW_STOCK
+  SYSTEM
+}
+
+model User {
+  id             String          @id @default(cuid())
+  name           String
+  username       String          @unique
+  password       String
+  role           Role            @default(KASIR)
+  status         UserStatus      @default(ACTIVE)
+  sales          Sale[]
+  stockMovements StockMovement[]
+  expenses       Expense[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  @@map("users")
+}
+
+model Fruit {
+  id                   String          @id @default(cuid())
+  code                 String          @unique
+  name                 String
+  unit                 String          @default("Kg")
+  defaultBuyPrice      Float
+  sellPrice            Float
+  currentStock         Float           @default(0)
+  minStock             Float           @default(5)
+  defaultShelfLifeDays Int             @default(14)
+  status               FruitStatus     @default(ACTIVE)
+  imageUrl             String?
+  batches              StockBatch[]
+  movements            StockMovement[]
+  saleItems            SaleItem[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+
+  @@map("fruits")
+}
+
+model Supplier {
+  id        String         @id @default(cuid())
+  code      String         @unique
+  name      String
+  phone     String?
+  address   String?
+  note      String?
+  status    SupplierStatus @default(ACTIVE)
+  batches   StockBatch[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@map("suppliers")
+}
+
+model StockBatch {
+  id              String          @id @default(cuid())
+  batchNumber     String          @unique
+  fruitId         String
+  fruit           Fruit           @relation(fields: [fruitId], references: [id], onDelete: Cascade)
+  supplierId      String?
+  supplier        Supplier?       @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  receiveDate     DateTime        @default(now())
+  initialQuantity Float
+  currentQuantity Float
+  unit            String          @default("Kg")
+  buyPrice        Float
+  shelfLifeDays   Int
+  expiryDate      DateTime
+  status          ExpiryStatus    @default(AMAN)
+  note            String?
+  movements       StockMovement[]
+  saleItems       SaleItem[]
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([fruitId, status])
+  @@index([expiryDate])
+  @@map("stock_batches")
+}
+
+model StockMovement {
+  id           String       @id @default(cuid())
+  type         MovementType
+  fruitId      String
+  fruit        Fruit        @relation(fields: [fruitId], references: [id], onDelete: Cascade)
+  stockBatchId String?
+  stockBatch   StockBatch?  @relation(fields: [stockBatchId], references: [id], onDelete: SetNull)
+  quantity     Float
+  unit         String       @default("Kg")
+  referenceNo  String?
+  note         String?
+  createdById  String?
+  createdBy    User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+
+  @@index([fruitId, createdAt])
+  @@map("stock_movements")
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  invoiceNo     String        @unique
+  saleDate      DateTime      @default(now())
+  cashierId     String?
+  cashier       User?         @relation(fields: [cashierId], references: [id], onDelete: SetNull)
+  totalAmount   Float
+  paidAmount    Float
+  changeAmount  Float
+  paymentMethod PaymentMethod @default(CASH)
+  status        SaleStatus    @default(COMPLETED)
+  note          String?
+  items         SaleItem[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@index([saleDate])
+  @@index([cashierId])
+  @@map("sales")
+}
+
+model SaleItem {
+  id           String     @id @default(cuid())
+  saleId       String
+  sale         Sale       @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  fruitId      String
+  fruit        Fruit      @relation(fields: [fruitId], references: [id], onDelete: Cascade)
+  stockBatchId String
+  stockBatch   StockBatch @relation(fields: [stockBatchId], references: [id], onDelete: Cascade)
+  quantity     Float
+  sellPrice    Float
+  buyPrice     Float
+  subtotal     Float
+  costTotal    Float
+  profit       Float
+  createdAt    DateTime   @default(now())
+
+  @@index([saleId])
+  @@index([fruitId])
+  @@index([stockBatchId])
+  @@map("sale_items")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  title       String
+  amount      Float
+  category    String   @default("Operasional")
+  date        DateTime @default(now())
+  note        String?
+  createdById String?
+  createdBy   User?    @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("expenses")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType @default(SYSTEM)
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  link      String?
+  createdAt DateTime         @default(now())
+
+  @@index([isRead, createdAt])
+  @@map("notifications")
+}
