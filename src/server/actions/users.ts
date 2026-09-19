@@ -16,32 +16,37 @@ export async function getUsersAction(params?: {
   const role = params?.role;
   const status = params?.status;
 
-  const users = await db.user.findMany({
-    where: {
-      ...(search
-        ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { username: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-      ...(role ? { role } : {}),
-      ...(status ? { status } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      name: true,
-      username: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
+  try {
+    const users = await db.user.findMany({
+      where: {
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { username: { contains: search, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(role ? { role } : {}),
+        ...(status ? { status } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
 
-  return { success: true, data: users };
+    return { success: true, data: users, error: undefined as string | undefined };
+  } catch (error) {
+    console.error("Get users error:", error);
+    return { success: false, data: [], error: "Gagal mengambil data pengguna" };
+  }
 }
 
 export async function createUserAction(formData: unknown) {
@@ -51,7 +56,7 @@ export async function createUserAction(formData: unknown) {
   if (!parseResult.success) {
     return {
       success: false,
-      error: parseResult.error.errors[0].message,
+      error: parseResult.error.issues[0]?.message || "Input pengguna tidak valid",
     };
   }
 
@@ -94,7 +99,7 @@ export async function updateUserAction(formData: unknown) {
   if (!parseResult.success) {
     return {
       success: false,
-      error: parseResult.error.errors[0].message,
+      error: parseResult.error.issues[0]?.message || "Input pengguna tidak valid",
     };
   }
 

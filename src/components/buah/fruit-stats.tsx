@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/tailgrids/core/card";
-import { Apple, CheckCircle2, AlertTriangle, Package } from "lucide-react";
+import { AppleBrandIcon, CheckCircle1, InfoTriangle, BoxArchive1 } from "@tailgrids/icons";
 
 interface FruitStatsProps {
   totalJenis: number;
@@ -20,25 +20,25 @@ export function FruitStats({
     {
       title: "Total Jenis Buah",
       value: totalJenis,
-      icon: Apple,
+      icon: AppleBrandIcon,
       color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400",
     },
     {
       title: "Buah Aktif",
       value: activeCount,
-      icon: CheckCircle2,
+      icon: CheckCircle1,
       color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400",
     },
     {
       title: "Stok Menipis (≤ Min)",
       value: lowStockCount,
-      icon: AlertTriangle,
+      icon: InfoTriangle,
       color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400",
     },
     {
       title: "Total Stok Keseluruhan",
       value: `${totalStockSum.toLocaleString("id-ID")} Unit`,
-      icon: Package,
+      icon: BoxArchive1,
       color: "text-purple-600 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-400",
     },
   ];

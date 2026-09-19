@@ -1,40 +1,45 @@
 "use client";
 
 import { Card } from "@/components/tailgrids/core/card";
-import { UserCircle1, UserMultiple1, Shield1Check, User2 } from "@tailgrids/icons";
+import { BoxArchive1, CheckCircle1, InfoTriangle, XmarkCircle } from "@tailgrids/icons";
 
-interface UserStatsProps {
-  total: number;
-  activeAdmins: number;
-  activeCashiers: number;
-  inactive: number;
+interface StokStatsProps {
+  totalBatches: number;
+  amanCount: number;
+  segeraBatasCount: number;
+  melewatiBatasCount: number;
 }
 
-export function UserStats({ total, activeAdmins, activeCashiers, inactive }: UserStatsProps) {
+export function StokStats({
+  totalBatches,
+  amanCount,
+  segeraBatasCount,
+  melewatiBatasCount,
+}: StokStatsProps) {
   const statItems = [
     {
-      title: "Total Pengguna",
-      value: total,
-      icon: UserMultiple1,
+      title: "Total Batch Stok",
+      value: `${totalBatches} Batch`,
+      icon: BoxArchive1,
       color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400",
     },
     {
-      title: "Admin Aktif",
-      value: activeAdmins,
-      icon: Shield1Check,
-      color: "text-purple-600 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-400",
-    },
-    {
-      title: "Kasir Aktif",
-      value: activeCashiers,
-      icon: UserCircle1,
+      title: "Masa Simpan Aman",
+      value: `${amanCount} Batch`,
+      icon: CheckCircle1,
       color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400",
     },
     {
-      title: "Nonaktif",
-      value: inactive,
-      icon: User2,
+      title: "Segera Melewati Batas",
+      value: `${segeraBatasCount} Batch`,
+      icon: InfoTriangle,
       color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400",
+    },
+    {
+      title: "Melewati Masa Simpan",
+      value: `${melewatiBatasCount} Batch`,
+      icon: XmarkCircle,
+      color: "text-red-600 bg-red-50 dark:bg-red-950/40 dark:text-red-400",
     },
   ];
 

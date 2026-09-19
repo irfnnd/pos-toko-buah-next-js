@@ -5,7 +5,7 @@ import { Button } from "@/components/tailgrids/core/button";
 import { User } from "@prisma/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
-import { Edit2, Trash2, Power, UserCheck, Shield } from "lucide-react";
+import { PenToSquare, Trash1, Reload, UserCircle1, Shield1Check } from "@tailgrids/icons";
 import { useState } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
 
@@ -42,7 +42,7 @@ export function UserTable({ users, onEdit, onToggleStatus, onDelete, isLoading }
   if (users.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-card-border bg-card-surface-area py-12 text-center">
-        <UserCheck className="mb-3 size-10 text-text-tertiary" />
+        <UserCircle1 className="mb-3 size-10 text-text-tertiary" />
         <h3 className="text-base font-semibold text-text-primary">Tidak Ada Pengguna</h3>
         <p className="text-sm text-text-tertiary">Belum ada data pengguna yang sesuai dengan kriteria filter.</p>
       </div>
@@ -79,11 +79,11 @@ export function UserTable({ users, onEdit, onToggleStatus, onDelete, isLoading }
 
                 <td className="px-5 py-4">
                   {user.role === "ADMIN" ? (
-                    <Badge color="purple" size="sm" prefixIcon={<Shield className="size-3" />}>
+                    <Badge color="purple" size="sm" prefixIcon={<Shield1Check className="size-3" />}>
                       Admin
                     </Badge>
                   ) : (
-                    <Badge color="blue" size="sm" prefixIcon={<UserCheck className="size-3" />}>
+                    <Badge color="blue" size="sm" prefixIcon={<UserCircle1 className="size-3" />}>
                       Kasir
                     </Badge>
                   )}
@@ -111,28 +111,28 @@ export function UserTable({ users, onEdit, onToggleStatus, onDelete, isLoading }
                       variant="ghost"
                       size="sm"
                       onClick={() => onToggleStatus(user.id)}
-                      title={user.status === "ACTIVE" ? "Nonaktifkan Akun" : "Aktifkan Akun"}
+                      aria-label={user.status === "ACTIVE" ? "Nonaktifkan Akun" : "Aktifkan Akun"}
                       className="p-1.5 text-text-tertiary hover:text-text-primary"
                     >
-                      <Power className={`size-4 ${user.status === "ACTIVE" ? "text-emerald-600" : "text-gray-400"}`} />
+                      <Reload className={`size-4 ${user.status === "ACTIVE" ? "text-emerald-600" : "text-gray-400"}`} />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(user)}
-                      title="Edit Pengguna"
+                      aria-label="Edit Pengguna"
                       className="p-1.5 text-text-tertiary hover:text-blue-600"
                     >
-                      <Edit2 className="size-4" />
+                      <PenToSquare className="size-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setDeleteTarget(user)}
-                      title="Hapus Pengguna"
+                      aria-label="Hapus Pengguna"
                       className="p-1.5 text-text-tertiary hover:text-red-600"
                     >
-                      <Trash2 className="size-4" />
+                      <Trash1 className="size-4" />
                     </Button>
                   </div>
                 </td>
@@ -151,10 +151,10 @@ export function UserTable({ users, onEdit, onToggleStatus, onDelete, isLoading }
           Apakah Anda yakin ingin menghapus akun pengguna <strong>{deleteTarget?.name}</strong> (@{deleteTarget?.username})? Actions ini tidak dapat dibatalkan.
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+          <Button variant="primary" appearance="outline" onClick={() => setDeleteTarget(null)}>
             Batal
           </Button>
-          <Button variant="primary" className="bg-red-600 hover:bg-red-700" onClick={confirmDelete}>
+          <Button variant="danger" onClick={confirmDelete}>
             Hapus Pengguna
           </Button>
         </DialogFooter>

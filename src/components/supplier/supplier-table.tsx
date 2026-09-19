@@ -3,7 +3,7 @@
 import { Badge } from "@/components/tailgrids/core/badge";
 import { Button } from "@/components/tailgrids/core/button";
 import { Supplier } from "@prisma/client";
-import { Edit2, Trash2, Power, Truck, Phone, MapPin } from "lucide-react";
+import { PenToSquare, Trash1, Reload, TruckDelivery2x, Telephone1, MapMarker5 } from "@tailgrids/icons";
 import { useState } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
 
@@ -48,7 +48,7 @@ export function SupplierTable({
   if (suppliers.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-card-border bg-card-surface-area py-12 text-center">
-        <Truck className="mb-3 size-10 text-text-tertiary" />
+        <TruckDelivery2x className="mb-3 size-10 text-text-tertiary" />
         <h3 className="text-base font-semibold text-text-primary">Tidak Ada Data Supplier</h3>
         <p className="text-sm text-text-tertiary">Belum ada supplier yang terdaftar atau cocok dengan pencarian.</p>
       </div>
@@ -75,7 +75,7 @@ export function SupplierTable({
                 <td className="px-5 py-4">
                   <div className="flex items-center gap-3">
                     <div className="flex size-9 items-center justify-center rounded-lg bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-400">
-                      <Truck className="size-5" />
+                      <TruckDelivery2x className="size-5" />
                     </div>
                     <div>
                       <p className="font-semibold text-text-primary">{sup.name}</p>
@@ -87,7 +87,7 @@ export function SupplierTable({
                 <td className="px-5 py-4">
                   {sup.phone ? (
                     <div className="flex items-center gap-1.5 text-xs font-medium text-text-secondary">
-                      <Phone className="size-3.5 text-text-tertiary" />
+                      <Telephone1 className="size-3.5 text-text-tertiary" />
                       {sup.phone}
                     </div>
                   ) : (
@@ -99,7 +99,7 @@ export function SupplierTable({
                   <div className="max-w-xs space-y-0.5">
                     {sup.address && (
                       <div className="flex items-start gap-1 text-xs text-text-secondary truncate">
-                        <MapPin className="mt-0.5 size-3.5 shrink-0 text-text-tertiary" />
+                        <MapMarker5 className="mt-0.5 size-3.5 shrink-0 text-text-tertiary" />
                         <span className="truncate">{sup.address}</span>
                       </div>
                     )}
@@ -134,28 +134,28 @@ export function SupplierTable({
                       variant="ghost"
                       size="sm"
                       onClick={() => onToggleStatus(sup.id)}
-                      title={sup.status === "ACTIVE" ? "Nonaktifkan Supplier" : "Aktifkan Supplier"}
+                      aria-label={sup.status === "ACTIVE" ? "Nonaktifkan Supplier" : "Aktifkan Supplier"}
                       className="p-1.5 text-text-tertiary hover:text-text-primary"
                     >
-                      <Power className={`size-4 ${sup.status === "ACTIVE" ? "text-emerald-600" : "text-gray-400"}`} />
+                      <Reload className={`size-4 ${sup.status === "ACTIVE" ? "text-emerald-600" : "text-gray-400"}`} />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => onEdit(sup)}
-                      title="Edit Supplier"
+                      aria-label="Edit Supplier"
                       className="p-1.5 text-text-tertiary hover:text-blue-600"
                     >
-                      <Edit2 className="size-4" />
+                      <PenToSquare className="size-4" />
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setDeleteTarget(sup)}
-                      title="Hapus Supplier"
+                      aria-label="Hapus Supplier"
                       className="p-1.5 text-text-tertiary hover:text-red-600"
                     >
-                      <Trash2 className="size-4" />
+                      <Trash1 className="size-4" />
                     </Button>
                   </div>
                 </td>
@@ -174,10 +174,10 @@ export function SupplierTable({
           Apakah Anda yakin ingin menghapus supplier <strong>{deleteTarget?.name}</strong> ({deleteTarget?.code})? Tindakan ini tidak dapat dibatalkan jika supplier belum memiliki relasi batch stok.
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+          <Button variant="primary" appearance="outline" onClick={() => setDeleteTarget(null)}>
             Batal
           </Button>
-          <Button variant="primary" className="bg-red-600 hover:bg-red-700" onClick={confirmDelete}>
+          <Button variant="danger" onClick={confirmDelete}>
             Hapus Supplier
           </Button>
         </DialogFooter>

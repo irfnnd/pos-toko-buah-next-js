@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/tailgrids/core/button";
-import { Plus, Search } from "lucide-react";
+import { Plus, Search1 as Search } from "@tailgrids/icons";
 
 interface FruitFilterProps {
   search: string;

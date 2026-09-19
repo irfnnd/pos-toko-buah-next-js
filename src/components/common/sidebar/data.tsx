@@ -10,7 +10,19 @@ import {
   Widget4Icon,
 } from "./icon";
 
-export const NAV_DATA = [
+export interface NavItem {
+  title: string;
+  url?: string;
+  icon?: React.ReactNode;
+  items?: NavItem[];
+}
+
+export interface NavSection {
+  label: string;
+  items: NavItem[];
+}
+
+export const NAV_DATA: NavSection[] = [
   {
     label: "MAIN MENU",
     items: [

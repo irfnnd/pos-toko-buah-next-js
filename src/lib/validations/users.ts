@@ -7,7 +7,7 @@ export const createUserSchema = z.object({
     .min(3, "Username minimal 3 karakter")
     .regex(/^[a-zA-Z0-9_]+$/, "Username hanya boleh berisi huruf, angka, dan underscore"),
   password: z.string().min(6, "Password minimal 6 karakter"),
-  role: z.enum(["ADMIN", "KASIR"], { required_error: "Role wajib dipilih" }),
+  role: z.enum(["ADMIN", "KASIR"], { message: "Role wajib dipilih" }),
   status: z.enum(["ACTIVE", "INACTIVE"]).default("ACTIVE"),
 });
 
@@ -19,7 +19,7 @@ export const updateUserSchema = z.object({
     .min(3, "Username minimal 3 karakter")
     .regex(/^[a-zA-Z0-9_]+$/, "Username hanya boleh berisi huruf, angka, dan underscore"),
   password: z.string().min(6, "Password minimal 6 karakter").optional().or(z.literal("")),
-  role: z.enum(["ADMIN", "KASIR"], { required_error: "Role wajib dipilih" }),
+  role: z.enum(["ADMIN", "KASIR"], { message: "Role wajib dipilih" }),
   status: z.enum(["ACTIVE", "INACTIVE"]),
 });
 

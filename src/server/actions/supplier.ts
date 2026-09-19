@@ -14,28 +14,33 @@ export async function getSuppliersAction(params?: {
   const search = params?.search?.trim();
   const status = params?.status;
 
-  const suppliers = await db.supplier.findMany({
-    where: {
-      ...(search
-        ? {
-            OR: [
-              { name: { contains: search, mode: "insensitive" } },
-              { code: { contains: search, mode: "insensitive" } },
-              { phone: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : {}),
-      ...(status ? { status } : {}),
-    },
-    orderBy: { createdAt: "desc" },
-    include: {
-      _count: {
-        select: { batches: true },
+  try {
+    const suppliers = await db.supplier.findMany({
+      where: {
+        ...(search
+          ? {
+              OR: [
+                { name: { contains: search, mode: "insensitive" } },
+                { code: { contains: search, mode: "insensitive" } },
+                { phone: { contains: search, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+        ...(status ? { status } : {}),
       },
-    },
-  });
+      orderBy: { createdAt: "desc" },
+      include: {
+        _count: {
+          select: { batches: true },
+        },
+      },
+    });
 
-  return { success: true, data: suppliers };
+    return { success: true, data: suppliers, error: undefined as string | undefined };
+  } catch (error) {
+    console.error("Get suppliers error:", error);
+    return { success: false, data: [], error: "Gagal mengambil data supplier" };
+  }
 }
 
 export async function createSupplierAction(formData: unknown) {
@@ -45,7 +50,7 @@ export async function createSupplierAction(formData: unknown) {
   if (!parseResult.success) {
     return {
       success: false,
-      error: parseResult.error.errors[0].message,
+      error: parseResult.error.issues[0]?.message || "Input data supplier tidak valid",
     };
   }
 
@@ -87,7 +92,7 @@ export async function updateSupplierAction(formData: unknown) {
   if (!parseResult.success) {
     return {
       success: false,
-      error: parseResult.error.errors[0].message,
+      error: parseResult.error.issues[0]?.message || "Input data supplier tidak valid",
     };
   }
 

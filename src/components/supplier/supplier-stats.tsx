@@ -1,7 +1,7 @@
 "use client";
 
 import { Card } from "@/components/tailgrids/core/card";
-import { Truck, CheckCircle2, XCircle, Boxes } from "lucide-react";
+import { TruckDelivery2x, CheckCircle1, XmarkCircle, BoxArchive1 } from "@tailgrids/icons";
 
 interface SupplierStatsProps {
   total: number;
@@ -20,25 +20,25 @@ export function SupplierStats({
     {
       title: "Total Supplier",
       value: total,
-      icon: Truck,
+      icon: TruckDelivery2x,
       color: "text-blue-600 bg-blue-50 dark:bg-blue-950/40 dark:text-blue-400",
     },
     {
       title: "Supplier Aktif",
       value: activeCount,
-      icon: CheckCircle2,
+      icon: CheckCircle1,
       color: "text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 dark:text-emerald-400",
     },
     {
       title: "Supplier Nonaktif",
       value: inactiveCount,
-      icon: XCircle,
+      icon: XmarkCircle,
       color: "text-amber-600 bg-amber-50 dark:bg-amber-950/40 dark:text-amber-400",
     },
     {
       title: "Total Pasokan Batch",
       value: `${totalBatchesSum} Batch`,
-      icon: Boxes,
+      icon: BoxArchive1,
       color: "text-purple-600 bg-purple-50 dark:bg-purple-950/40 dark:text-purple-400",
     },
   ];

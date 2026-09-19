@@ -17,7 +17,7 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
   const validation = loginSchema.safeParse({ username, password });
   if (!validation.success) {
     return {
-      error: validation.error.errors[0].message,
+      error: validation.error.issues[0]?.message || "Input tidak valid",
     };
   }
 

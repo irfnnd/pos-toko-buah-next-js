@@ -3,7 +3,7 @@
 import { Badge } from "@/components/tailgrids/core/badge";
 import { Button } from "@/components/tailgrids/core/button";
 import { Fruit } from "@prisma/client";
-import { Edit2, Trash2, Power, Apple, AlertTriangle } from "lucide-react";
+import { PenToSquare, Trash1, Reload, AppleBrandIcon, InfoTriangle } from "@tailgrids/icons";
 import { useState } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
 
@@ -50,7 +50,7 @@ export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading
   if (fruits.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-2xl border border-card-border bg-card-surface-area py-12 text-center">
-        <Apple className="mb-3 size-10 text-text-tertiary" />
+        <AppleBrandIcon className="mb-3 size-10 text-text-tertiary" />
         <h3 className="text-base font-semibold text-text-primary">Tidak Ada Data Buah</h3>
         <p className="text-sm text-text-tertiary">Belum ada buah yang terdaftar atau cocok dengan kata kunci pencarian.</p>
       </div>
@@ -85,7 +85,7 @@ export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading
                         {fruit.imageUrl ? (
                           <img src={fruit.imageUrl} alt={fruit.name} className="size-full rounded-lg object-cover" />
                         ) : (
-                          <Apple className="size-5" />
+                          <AppleBrandIcon className="size-5" />
                         )}
                       </div>
                       <div>
@@ -116,7 +116,7 @@ export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading
                       </span>
                       {isLowStock && (
                         <span title={`Stok ≤ min stok (${fruit.minStock} ${fruit.unit})`}>
-                          <AlertTriangle className="size-4 text-amber-500" />
+                          <InfoTriangle className="size-4 text-amber-500" />
                         </span>
                       )}
                     </div>
@@ -144,28 +144,28 @@ export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading
                         variant="ghost"
                         size="sm"
                         onClick={() => onToggleStatus(fruit.id)}
-                        title={fruit.status === "ACTIVE" ? "Nonaktifkan Buah" : "Aktifkan Buah"}
+                        aria-label={fruit.status === "ACTIVE" ? "Nonaktifkan Buah" : "Aktifkan Buah"}
                         className="p-1.5 text-text-tertiary hover:text-text-primary"
                       >
-                        <Power className={`size-4 ${fruit.status === "ACTIVE" ? "text-emerald-600" : "text-gray-400"}`} />
+                        <Reload className={`size-4 ${fruit.status === "ACTIVE" ? "text-emerald-600" : "text-gray-400"}`} />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => onEdit(fruit)}
-                        title="Edit Buah"
+                        aria-label="Edit Buah"
                         className="p-1.5 text-text-tertiary hover:text-blue-600"
                       >
-                        <Edit2 className="size-4" />
+                        <PenToSquare className="size-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setDeleteTarget(fruit)}
-                        title="Hapus Buah"
+                        aria-label="Hapus Buah"
                         className="p-1.5 text-text-tertiary hover:text-red-600"
                       >
-                        <Trash2 className="size-4" />
+                        <Trash1 className="size-4" />
                       </Button>
                     </div>
                   </td>
@@ -185,10 +185,10 @@ export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading
           Apakah Anda yakin ingin menghapus <strong>{deleteTarget?.name}</strong> ({deleteTarget?.code})? Tindakan ini akan menghapus master data buah. Jika buah sudah terhubung ke batch/transaksi, hapus tidak diperbolehkan.
         </DialogBody>
         <DialogFooter>
-          <Button variant="outline" onClick={() => setDeleteTarget(null)}>
+          <Button variant="primary" appearance="outline" onClick={() => setDeleteTarget(null)}>
             Batal
           </Button>
-          <Button variant="primary" className="bg-red-600 hover:bg-red-700" onClick={confirmDelete}>
+          <Button variant="danger" onClick={confirmDelete}>
             Hapus Buah
           </Button>
         </DialogFooter>

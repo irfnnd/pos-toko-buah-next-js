@@ -181,10 +181,10 @@ export function SupplierFormModal({
         </DialogBody>
 
         <DialogFooter className="mt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+          <Button type="button" variant="primary" appearance="outline" onClick={onClose} isDisabled={isLoading}>
             Batal
           </Button>
-          <Button type="submit" disabled={isLoading}>
+          <Button type="submit" isDisabled={isLoading}>
             {isLoading ? "Menyimpan..." : editingSupplier ? "Simpan Perubahan" : "Tambah Supplier"}
           </Button>
         </DialogFooter>
