@@ -80,10 +80,10 @@ export function PosProductCard({ fruit, onAddToCart, cartQuantity = 0 }: PosProd
       </div>
 
       {/* Price & Action */}
-      <div className="mt-3 flex items-center justify-between border-t border-card-border pt-3">
-        <div>
-          <span className="text-xs text-text-tertiary block">Harga</span>
-          <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-card-border pt-3">
+        <div className="min-w-0 flex-1">
+          <span className="text-[10px] uppercase font-semibold text-text-tertiary block leading-none mb-0.5">Harga</span>
+          <span className="text-sm sm:text-base font-bold text-emerald-600 dark:text-emerald-400 truncate block">
             {formatCurrency(fruit.sellPrice)}
           </span>
         </div>
@@ -92,9 +92,9 @@ export function PosProductCard({ fruit, onAddToCart, cartQuantity = 0 }: PosProd
           size="sm"
           isDisabled={isOutOfStock}
           onClick={() => onAddToCart(fruit)}
-          className="gap-1 rounded-xl px-3"
+          className="shrink-0 gap-1 rounded-xl px-2.5 text-xs font-semibold whitespace-nowrap"
         >
-          <Plus className="size-4" />
+          <Plus className="size-3.5" />
           Tambah
         </Button>
       </div>

@@ -1,34 +1,38 @@
-import InventoryOverview from "./_component/inventory-overview";
-import LastTransactionsTable from "./_component/last-transactions-table";
-import ECommerceOverviewStats from "./_component/overview-stats";
-import RegionLabels from "./_component/region-labels";
-import SalesChart from "./_component/sales-chart";
-import TopProducts from "./_component/top-products";
-import TrafficSources from "./_component/traffic-sources";
+import PosOverviewStats from "./_component/pos-overview-stats";
+import PosRecentTransactions from "./_component/pos-recent-transactions";
+import PosSalesChart from "./_component/pos-sales-chart";
+import PosTopProducts from "./_component/pos-top-products";
+import { getDashboardSummaryAction } from "@/server/actions/dashboard";
 
-export default function Home() {
+export default async function Home() {
+  const summary = await getDashboardSummaryAction();
+
   return (
-    <div className="mt-6 space-y-5">
+    <div className="mt-6 space-y-6 px-2 lg:px-6 mb-12">
       {/* Header Section */}
-      <div className="px-2 lg:px-6">
-        <h1 className="mb-1 text-[28px] leading-8 font-medium text-text-primary">E-commerce</h1>
-        <p className="text-sm leading-5 text-text-tertiary">
-          Track sales, monitor orders, and analyze store performance.
+      <div>
+        <h1 className="text-2xl font-bold text-text-primary">
+          Dashboard POS Toko Buah
+        </h1>
+        <p className="text-sm text-text-tertiary">
+          Ringkasan penjualan real-time, stok aktif, notifikasi masa simpan, dan performa produk.
         </p>
       </div>
 
-      <div className="space-y-5 px-2 lg:px-5">
-        <ECommerceOverviewStats />
-        <SalesChart />
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-[519fr_558fr]">
-          <InventoryOverview />
-          <TopProducts />
+      {/* 1. Overview Metric Cards */}
+      <PosOverviewStats metrics={summary.metrics} />
+
+      {/* 2. 7-Day Sales & Profit Chart */}
+      <PosSalesChart salesTrend7Days={summary.salesTrend7Days} />
+
+      {/* 3. Grid: Top Products & Recent Transactions */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <PosTopProducts topProducts={summary.topProducts} />
         </div>
-        <div className="grid grid-cols-1 gap-5 md:grid-cols-[546fr_531fr]">
-          <TrafficSources />
-          <RegionLabels />
+        <div className="lg:col-span-7">
+          <PosRecentTransactions lastTransactions={summary.lastTransactions} />
         </div>
-        <LastTransactionsTable />
       </div>
     </div>
   );

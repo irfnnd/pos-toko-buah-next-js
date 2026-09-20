@@ -83,20 +83,19 @@ export default function KasirPage() {
     }
   };
 
-  const handleQuantityChange = (fruitId: string, delta: number) => {
+  const handleSetExactQuantity = (fruitId: string, targetQty: number) => {
     const fruit = fruits.find((f) => f.id === fruitId);
     if (!fruit) return;
 
-    const currentQty = getCartQuantity(fruitId);
-    const newQty = currentQty + delta;
-
-    if (newQty <= 0) {
+    if (targetQty <= 0) {
       handleRemoveItem(fruitId);
       return;
     }
 
+    const roundedQty = Math.round(targetQty * 100) / 100;
+
     try {
-      const allocations = allocateBatchesFEFO(fruit, newQty);
+      const allocations = allocateBatchesFEFO(fruit, roundedQty);
       const totalSubtotal = allocations.reduce((sum, a) => sum + a.subtotal, 0);
       const totalCost = allocations.reduce((sum, a) => sum + a.costTotal, 0);
       const totalProfit = totalSubtotal - totalCost;
@@ -106,7 +105,7 @@ export default function KasirPage() {
           item.fruitId === fruitId
             ? {
                 ...item,
-                requestedQuantity: newQty,
+                requestedQuantity: roundedQty,
                 allocations,
                 totalSubtotal,
                 totalCost,
@@ -118,6 +117,12 @@ export default function KasirPage() {
     } catch (err: any) {
       toast.error(err?.message || "Stok tidak mencukupi untuk penambahan kuantitas ini");
     }
+  };
+
+  const handleQuantityChange = (fruitId: string, delta: number) => {
+    const currentQty = getCartQuantity(fruitId);
+    const newQty = Math.max(0, Math.round((currentQty + delta) * 100) / 100);
+    handleSetExactQuantity(fruitId, newQty);
   };
 
   const handleRemoveItem = (fruitId: string) => {
@@ -172,7 +177,7 @@ export default function KasirPage() {
       </div>
 
       {/* Main 3-Column Layout */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 min-h-[calc(100vh-170px)]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">
         {/* Left Side: Product Catalog (8 cols) */}
         <div className="lg:col-span-7 xl:col-span-8 space-y-4">
           <PosProductGrid
@@ -183,11 +188,12 @@ export default function KasirPage() {
           />
         </div>
 
-        {/* Right Side: Shopping Cart Panel (4 cols) */}
-        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-20 lg:h-[calc(100vh-110px)]">
+        {/* Right Side: Shopping Cart Panel (4 cols - Sticky Fixed Position) */}
+        <div className="lg:col-span-5 xl:col-span-4 lg:sticky lg:top-2 lg:h-[calc(100vh-120px)]">
           <PosCart
             cart={cart}
             onQuantityChange={handleQuantityChange}
+            onSetExactQuantity={handleSetExactQuantity}
             onRemoveItem={handleRemoveItem}
             onClearCart={handleClearCart}
             onCheckout={() => setIsCheckoutOpen(true)}

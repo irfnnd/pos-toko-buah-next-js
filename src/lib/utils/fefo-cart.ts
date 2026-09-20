@@ -41,7 +41,7 @@ export function allocateBatchesFEFO(
     .filter((b) => b.currentQuantity > 0 && b.status !== ExpiryStatus.MELEWATI_BATAS)
     .sort((a, b) => new Date(a.expiryDate).getTime() - new Date(b.expiryDate).getTime());
 
-  let remainingToAllocate = requestedQuantity;
+  let remainingToAllocate = Math.round(requestedQuantity * 1000) / 1000;
   const allocations: BatchAllocation[] = [];
 
   for (const batch of validBatches) {
@@ -58,16 +58,16 @@ export function allocateBatchesFEFO(
       expiryDate: batch.expiryDate,
       buyPrice: batch.buyPrice,
       sellPrice: fruit.sellPrice,
-      quantity: qtyFromBatch,
+      quantity: Math.round(qtyFromBatch * 1000) / 1000,
       subtotal,
       costTotal,
       profit,
     });
 
-    remainingToAllocate -= qtyFromBatch;
+    remainingToAllocate = Math.round((remainingToAllocate - qtyFromBatch) * 1000) / 1000;
   }
 
-  if (remainingToAllocate > 0) {
+  if (remainingToAllocate > 0.001) {
     throw new Error(
       `Stok tidak mencukupi untuk ${fruit.name}. Sisa yang dibutuhkan: ${remainingToAllocate} ${fruit.unit}`
     );

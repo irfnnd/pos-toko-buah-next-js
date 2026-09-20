@@ -34,7 +34,7 @@ export function PosProductGrid({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
           <div key={i} className="h-64 w-full animate-pulse rounded-2xl bg-gray-100 dark:bg-gray-800" />
         ))}
@@ -93,7 +93,7 @@ export function PosProductGrid({
           <p className="text-sm text-text-tertiary">Tidak ada produk buah yang sesuai dengan kata kunci pencarian.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {filteredFruits.map((fruit) => (
             <PosProductCard
               key={fruit.id}

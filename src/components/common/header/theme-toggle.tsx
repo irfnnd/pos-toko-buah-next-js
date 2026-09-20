@@ -2,9 +2,15 @@
 import { MoonIcon, SunIcon } from "@/components/common/header/icons";
 import { Button } from "@/components/tailgrids/core/button";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <Button
@@ -13,7 +19,7 @@ export default function ThemeToggle() {
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       className="size-10 rounded-lg border border-card-border bg-card-background text-icon-primary shadow-xs outline-none focus-visible:border-input-primary-focus-border focus-visible:ring-4 focus-visible:ring-input-primary-focus-border/20 [&>svg]:size-auto"
     >
-      {theme === "dark" ? <SunIcon /> : <MoonIcon />}
+      {!mounted || theme === "dark" ? <SunIcon /> : <MoonIcon />}
     </Button>
   );
 }
