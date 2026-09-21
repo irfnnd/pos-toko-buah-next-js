@@ -2,6 +2,7 @@
 
 import { loginAction } from "@/server/actions/auth";
 import { useActionState } from "react";
+import { Logo } from "@/utils/icon";
 
 export default function LoginPage() {
   const [state, action, isPending] = useActionState(loginAction, null);
@@ -10,8 +11,8 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 dark:bg-gray-900 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8 rounded-2xl border border-gray-200 bg-white p-8 shadow-xl dark:border-gray-800 dark:bg-gray-950">
         <div className="text-center">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-600 text-3xl font-bold text-white shadow-lg shadow-emerald-500/30">
-            🍊
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-50 shadow-md shadow-emerald-500/10 dark:bg-emerald-950/40">
+            <Logo className="h-9 w-9" />
           </div>
           <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-gray-900 dark:text-white">
             POS Toko Buah

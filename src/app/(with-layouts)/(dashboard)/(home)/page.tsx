@@ -12,11 +12,8 @@ export default async function Home() {
       {/* Header Section */}
       <div>
         <h1 className="text-2xl font-bold text-text-primary">
-          Dashboard POS Toko Buah
+          Dashboard
         </h1>
-        <p className="text-sm text-text-tertiary">
-          Ringkasan penjualan real-time, stok aktif, notifikasi masa simpan, dan performa produk.
-        </p>
       </div>
 
       {/* 1. Overview Metric Cards */}
