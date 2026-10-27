@@ -17,6 +17,7 @@ interface StokFilterProps {
   suppliers: Supplier[];
   onAddStockInClick: () => void;
   onAddStockOutClick: () => void;
+  userRole?: string;
 }
 
 export function StokFilter({
@@ -32,7 +33,10 @@ export function StokFilter({
   suppliers,
   onAddStockInClick,
   onAddStockOutClick,
+  userRole = "ADMIN",
 }: StokFilterProps) {
+  const canModify = userRole === "ADMIN";
+
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
       <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center flex-wrap">
@@ -90,16 +94,18 @@ export function StokFilter({
         </select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button onClick={onAddStockOutClick} variant="primary" appearance="outline" className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40">
-          <Minus className="size-4" />
-          Stok Keluar / Koreksi
-        </Button>
-        <Button onClick={onAddStockInClick} className="gap-2">
-          <Plus className="size-4" />
-          Stok Masuk Baru
-        </Button>
-      </div>
+      {canModify && (
+        <div className="flex items-center gap-2">
+          <Button onClick={onAddStockOutClick} variant="primary" appearance="outline" className="gap-2 border-amber-500 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/40">
+            <Minus className="size-4" />
+            Stok Keluar / Koreksi
+          </Button>
+          <Button onClick={onAddStockInClick} className="gap-2">
+            <Plus className="size-4" />
+            Stok Masuk Baru
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

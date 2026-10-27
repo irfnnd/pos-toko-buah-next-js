@@ -17,9 +17,11 @@ interface StokBatchTableProps {
   batches: StockBatchWithRelations[];
   onStockOutClick: (batch: StockBatchWithRelations) => void;
   isLoading?: boolean;
+  userRole?: string;
 }
 
-export function StokBatchTable({ batches, onStockOutClick, isLoading }: StokBatchTableProps) {
+export function StokBatchTable({ batches, onStockOutClick, isLoading, userRole = "ADMIN" }: StokBatchTableProps) {
+  const canModify = userRole === "ADMIN";
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
       style: "currency",
@@ -152,16 +154,18 @@ export function StokBatchTable({ batches, onStockOutClick, isLoading }: StokBatc
                 </td>
 
                 <td className="px-5 py-4 text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    isDisabled={isDepleted}
-                    onClick={() => onStockOutClick(batch)}
-                    aria-label="Kurangi stok batch ini"
-                    className="p-1.5 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/50"
-                  >
-                    <Minus className="size-4" />
-                  </Button>
+                  {canModify && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      isDisabled={isDepleted}
+                      onClick={() => onStockOutClick(batch)}
+                      aria-label="Kurangi stok batch ini"
+                      className="p-1.5 text-amber-600 hover:bg-amber-50 hover:text-amber-700 dark:hover:bg-amber-950/50"
+                    >
+                      <Minus className="size-4" />
+                    </Button>
+                  )}
                 </td>
               </tr>
             );

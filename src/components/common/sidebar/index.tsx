@@ -19,11 +19,13 @@ export default function Sidebar({
     toggleSidebar,
     isMobileSheet = false,
     onItemClick,
+    userRole = 'KASIR', // Tambahkan properti userRole
 }: {
     isSidebarOpen: boolean;
     toggleSidebar: () => void;
     isMobileSheet?: boolean;
     onItemClick?: () => void;
+    userRole?: string; // Tipe data properti
 }) {
     const pathname = usePathname();
     const { theme } = useTheme();
@@ -32,6 +34,32 @@ export default function Sidebar({
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Filter NAV_DATA secara dinamis berdasarkan userRole
+    const filteredNavData = useMemo(() => {
+        return NAV_DATA.map((section) => {
+            // Filter menu utama
+            const allowedItems = section.items.filter((item: any) => {
+                // Jika item memiliki array 'roles', cek aksesnya. Jika tidak, asumsikan publik.
+                if (item.roles && !item.roles.includes(userRole)) {
+                    return false;
+                }
+                return true;
+            }).map((item: any) => {
+                // Filter sub-menu (nested items) jika ada
+                if (item.items && item.items.length > 0) {
+                    const allowedSubItems = item.items.filter((subItem: any) => {
+                        if (subItem.roles && !subItem.roles.includes(userRole)) return false;
+                        return true;
+                    });
+                    return { ...item, items: allowedSubItems };
+                }
+                return item;
+            });
+
+            return { ...section, items: allowedItems };
+        }).filter((section) => section.items.length > 0); // Sembunyikan section (label) jika tidak ada menu di dalamnya
+    }, [userRole]);
 
     // Compute which group should be open based on the current route
     const activeGroupKey = useMemo(
@@ -95,7 +123,8 @@ export default function Sidebar({
                     expandedKeys={expandedKeys}
                     onExpandedChange={setExpandedKeys}
                 >
-                    {NAV_DATA.map((section) => (
+                    {/* Gunakan filteredNavData, BUKAN NAV_DATA original */}
+                    {filteredNavData.map((section) => (
                         <div key={section.label}>
                             {/* Expanded: show section label | Collapsed: show divider between sections */}
                             {isSidebarOpen ? (

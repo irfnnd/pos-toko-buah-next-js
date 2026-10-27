@@ -12,7 +12,6 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend,
 } from "recharts";
 
 interface LabaRugiChartsProps {
@@ -21,49 +20,127 @@ interface LabaRugiChartsProps {
     totalCostOfGoods: number;
     grossProfit: number;
     totalExpenses: number;
+    totalStockLoss?: number;
+    expiredLoss?: number;
+    damagedLoss?: number;
     netProfit: number;
   };
-  expenseBreakdown: Array<{ category: string; total: number }>;
+  expenseBreakdown: Array<{
+    category: string;
+    total: number;
+  }>;
 }
 
-const CATEGORY_COLORS = ["#F59E0B", "#EF4444", "#8B5CF6", "#3B82F6", "#10B981", "#6B7280"];
+const CATEGORY_COLORS = [
+  "#F59E0B",
+  "#EF4444",
+  "#8B5CF6",
+  "#3B82F6",
+  "#10B981",
+  "#6B7280",
+];
 
-export function LabaRugiCharts({ statement, expenseBreakdown }: LabaRugiChartsProps) {
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat("id-ID", {
+export function LabaRugiCharts({
+  statement,
+  expenseBreakdown,
+}: LabaRugiChartsProps) {
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       maximumFractionDigits: 0,
-    }).format(val);
-  };
+    }).format(Number.isFinite(value) ? value : 0);
 
-  const pnlData = [
-    { name: "Omset Penjualan", nominal: statement.totalSales, fill: "#10B981" },
-    { name: "Total HPP (Modal)", nominal: statement.totalCostOfGoods, fill: "#64748B" },
-    { name: "Laba Kotor", nominal: statement.grossProfit, fill: "#3B82F6" },
-    { name: "Pengeluaran Operasional", nominal: statement.totalExpenses, fill: "#F59E0B" },
-    { name: "Laba Bersih", nominal: statement.netProfit, fill: statement.netProfit >= 0 ? "#059669" : "#DC2626" },
-  ];
+  const inventoryLoss = statement.totalStockLoss ?? 0;
+
+const pnlData = [
+  {
+    name: "Omzet",
+    nominal: statement.totalSales,
+    fill: "#10B981",
+  },
+  {
+    name: "HPP",
+    nominal: -statement.totalCostOfGoods,
+    fill: "#64748B",
+  },
+  {
+    name: "Laba Kotor",
+    nominal: statement.grossProfit,
+    fill: "#3B82F6",
+  },
+  {
+    name: "Kerugian Stok",
+    nominal: -inventoryLoss,
+    fill: "#EF4444",
+  },
+  {
+    name: "Biaya Operasional",
+    nominal: -statement.totalExpenses,
+    fill: "#F59E0B",
+  },
+  {
+    name: "Laba Bersih",
+    nominal: statement.netProfit,
+    fill: statement.netProfit >= 0 ? "#059669" : "#DC2626",
+  },
+];
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-      {/* P&L Comparison Bar Chart (8 Cols) */}
-      <Card className="lg:col-span-8 p-5 space-y-4 shadow-xs border border-card-border bg-card-surface-area">
+      {/* Grafik Perbandingan Laba Rugi */}
+      <Card className="space-y-4 border border-card-border bg-card-surface-area p-5 shadow-xs lg:col-span-8">
         <div className="border-b border-card-border pb-3">
-          <h3 className="text-base font-bold text-text-primary">Perbandingan Struktur Laba Rugi</h3>
-          <p className="text-xs text-text-tertiary">Komposisi Omset, HPP, Laba Kotor, Pengeluaran, dan Laba Bersih</p>
+          <h3 className="text-base font-bold text-text-primary">
+            Perbandingan Struktur Laba Rugi
+          </h3>
+          <p className="text-xs text-text-tertiary">
+            Omzet, HPP, laba kotor, kerugian stok, biaya operasional,
+            dan laba bersih
+          </p>
         </div>
 
-        <div className="h-72 w-full">
+        <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={pnlData} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
-              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `Rp${v / 1000}k`} />
-              <Tooltip formatter={(value: any) => formatCurrency(Number(value))} />
-              <Bar dataKey="nominal" radius={[8, 8, 0, 0]}>
-                {pnlData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.fill} />
+            <BarChart
+              data={pnlData}
+              margin={{ top: 20, right: 12, left: 12, bottom: 8 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                vertical={false}
+                opacity={0.3}
+              />
+
+              <XAxis
+                dataKey="name"
+                tick={{ fontSize: 10 }}
+                interval={0}
+                angle={-15}
+                textAnchor="end"
+                height={55}
+              />
+
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickFormatter={(value) =>
+                  `Rp${new Intl.NumberFormat("id-ID", {
+                    notation: "compact",
+                    maximumFractionDigits: 1,
+                  }).format(Math.abs(value))}`
+                }
+              />
+
+              <Tooltip
+                formatter={(value: number | string | undefined) => [
+                  formatCurrency(Number(value ?? 0)),
+                  "Nominal",
+                ]}
+              />
+
+              <Bar dataKey="nominal" name="Nominal" radius={[6, 6, 0, 0]}>
+                {pnlData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fill} />
                 ))}
               </Bar>
             </BarChart>
@@ -71,16 +148,22 @@ export function LabaRugiCharts({ statement, expenseBreakdown }: LabaRugiChartsPr
         </div>
       </Card>
 
-      {/* Expense Breakdown Pie Chart (4 Cols) */}
-      <Card className="lg:col-span-4 p-5 space-y-4 shadow-xs border border-card-border bg-card-surface-area">
+      {/* Grafik Biaya Operasional */}
+      <Card className="space-y-4 border border-card-border bg-card-surface-area p-5 shadow-xs lg:col-span-4">
         <div className="border-b border-card-border pb-3">
-          <h3 className="text-base font-bold text-text-primary">Sebaran Biaya Operasional</h3>
-          <p className="text-xs text-text-tertiary">Distribusi pengeluaran berdasarkan kategori</p>
+          <h3 className="text-base font-bold text-text-primary">
+            Sebaran Biaya Operasional
+          </h3>
+          <p className="text-xs text-text-tertiary">
+            Distribusi pengeluaran berdasarkan kategori
+          </p>
         </div>
 
-        <div className="h-72 w-full flex items-center justify-center">
+        <div className="flex h-80 w-full items-center justify-center">
           {expenseBreakdown.length === 0 ? (
-            <div className="text-xs text-text-tertiary">Belum ada pengeluaran.</div>
+            <div className="text-xs text-text-tertiary">
+              Belum ada pengeluaran.
+            </div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -89,17 +172,30 @@ export function LabaRugiCharts({ statement, expenseBreakdown }: LabaRugiChartsPr
                   cx="50%"
                   cy="50%"
                   innerRadius={45}
-                  outerRadius={75}
+                  outerRadius={80}
                   paddingAngle={4}
                   dataKey="total"
                   nameKey="category"
-                  label={({ name, percent }: { name?: string; percent?: number }) => `${name || ''} ${((percent || 0) * 100).toFixed(0)}%`}
+                  label={({ name, percent }) =>
+                    `${name ?? ""} ${(((percent ?? 0) * 100)).toFixed(0)}%`
+                  }
                 >
                   {expenseBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CATEGORY_COLORS[index % CATEGORY_COLORS.length]} />
+                    <Cell
+                      key={entry.category}
+                      fill={
+                        CATEGORY_COLORS[index % CATEGORY_COLORS.length]
+                      }
+                    />
                   ))}
                 </Pie>
-                <Tooltip formatter={(val: any) => formatCurrency(Number(val))} />
+
+                <Tooltip
+                  formatter={(value: number | string | undefined) => [
+                    formatCurrency(Number(value ?? 0)),
+                    "Total",
+                  ]}
+                />
               </PieChart>
             </ResponsiveContainer>
           )}

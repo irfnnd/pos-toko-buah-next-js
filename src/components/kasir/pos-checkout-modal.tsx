@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
 import { Button } from "@/components/tailgrids/core/button";
 import { CartItem } from "@/lib/utils/fefo-cart";
-import { Doller, CreditCard, CheckCircle1 } from "@tailgrids/icons";
+import { Dollar, CreditCard, CheckCircle1 } from "@tailgrids/icons";
 
 interface PosCheckoutModalProps {
   isOpen: boolean;
@@ -151,7 +151,7 @@ export function PosCheckoutModal({
             </label>
             <div className="grid grid-cols-4 gap-2">
               {[
-                { id: "CASH", label: "Tunai", icon: Doller },
+                { id: "CASH", label: "Tunai", icon: Dollar },
                 { id: "QRIS", label: "QRIS", icon: CreditCard },
                 { id: "TRANSFER", label: "Transfer", icon: CreditCard },
                 { id: "OTHER", label: "Lainnya", icon: CreditCard },

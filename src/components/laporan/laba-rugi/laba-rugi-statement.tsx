@@ -10,6 +10,9 @@ interface LabaRugiStatementProps {
     totalCostOfGoods: number;
     grossProfit: number;
     totalExpenses: number;
+    totalStockLoss?: number;
+    expiredLoss?: number;
+    damagedLoss?: number;
     netProfit: number;
   };
   onAddExpenseClick: () => void;
@@ -19,84 +22,141 @@ export function LabaRugiStatement({
   statement,
   onAddExpenseClick,
 }: LabaRugiStatementProps) {
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("id-ID", {
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat("id-ID", {
       style: "currency",
       currency: "IDR",
       maximumFractionDigits: 0,
-    }).format(amount || 0);
-  };
+    }).format(Number.isFinite(amount) ? amount : 0);
 
-  const isNetProfitPositive = statement.netProfit >= 0;
+  const inventoryLoss = statement.totalStockLoss ?? 0;
+  const netProfit = statement.netProfit;
+  const isNetProfitPositive = netProfit >= 0;
+
+  const rows = [
+    {
+      label: "Pendapatan Penjualan",
+      description: "Total omzet penjualan",
+      amount: statement.totalSales,
+      type: "normal",
+    },
+    {
+      label: "Harga Pokok Penjualan (HPP)",
+      description: "Modal buah yang terjual berdasarkan batch",
+      amount: statement.totalCostOfGoods,
+      type: "deduction",
+    },
+    {
+      label: "Laba Kotor",
+      description: "Penjualan dikurangi HPP",
+      amount: statement.grossProfit,
+      type: "subtotal",
+    },
+    {
+      label: "Kerugian Stok Buah",
+      description: "Nilai pokok buah busuk, rusak, atau tidak layak jual",
+      amount: inventoryLoss,
+      type: "loss",
+    },
+    {
+      label: "Biaya Operasional",
+      description: "Biaya operasional toko di luar kerugian stok",
+      amount: statement.totalExpenses,
+      type: "deduction",
+    },
+  ] as const;
 
   return (
-    <Card className="p-6 space-y-6 shadow-xs border border-card-border bg-card-surface-area">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-card-border pb-4">
+    <Card className="space-y-5 border border-card-border bg-card-surface-area p-4 shadow-xs sm:p-6">
+      <div className="flex flex-col gap-4 border-b border-card-border pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-bold text-text-primary">Laporan Keuangan Laba Rugi Toko</h2>
-          <p className="text-xs text-text-tertiary">
-            Rincian resmi pendapatan, HPP historis batch, laba kotor, dan laba bersih operasional.
+          <h2 className="text-lg font-bold text-text-primary sm:text-xl">
+            Laporan Laba Rugi
+          </h2>
+          <p className="mt-1 text-sm text-text-tertiary">
+            Ringkasan pendapatan, HPP, kerugian persediaan, dan biaya operasional.
           </p>
         </div>
 
-        <Button onClick={onAddExpenseClick} className="gap-2 shrink-0">
+        <Button
+          onClick={onAddExpenseClick}
+          className="flex shrink-0 items-center justify-center gap-2"
+        >
           <Plus className="size-4" />
           Tambah Biaya Operasional
         </Button>
       </div>
 
-      {/* Financial Statement Breakdown Table */}
-      <div className="space-y-3 font-mono text-sm">
-        {/* 1. Total Penjualan */}
-        <div className="flex items-center justify-between py-2 border-b border-card-border/60">
-          <span className="font-semibold text-text-primary">1. Total Pendapatan Penjualan (Omset)</span>
-          <span className="font-bold text-text-primary text-base">
-            {formatCurrency(statement.totalSales)}
-          </span>
-        </div>
+      <div className="divide-y divide-card-border/60">
+        {rows.map((row) => (
+          <div
+            key={row.label}
+            className={`flex flex-col gap-1 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 ${
+              row.type === "subtotal"
+                ? "my-2 rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 dark:border-emerald-900 dark:bg-emerald-950/20"
+                : row.type === "loss"
+                  ? "px-1"
+                  : ""
+            }`}
+          >
+            <div className="min-w-0">
+              <p
+                className={`text-sm ${
+                  row.type === "subtotal"
+                    ? "font-bold text-emerald-800 dark:text-emerald-300"
+                    : row.type === "loss"
+                      ? "font-semibold text-red-700 dark:text-red-400"
+                      : "font-medium text-text-primary"
+                }`}
+              >
+                {row.type === "deduction" || row.type === "loss"
+                  ? "(-) "
+                  : row.type === "subtotal"
+                    ? "(=) "
+                    : ""}
+                {row.label}
+              </p>
+              <p className="mt-1 text-xs text-text-tertiary">
+                {row.description}
+              </p>
+            </div>
 
-        {/* 2. Total HPP */}
-        <div className="flex items-center justify-between py-2 border-b border-card-border/60 text-text-secondary pl-4">
-          <span>(-) Total Harga Pokok Penjualan (HPP / Modal Batch)</span>
-          <span className="font-semibold text-text-secondary">
-            {formatCurrency(statement.totalCostOfGoods)}
-          </span>
-        </div>
-
-        {/* 3. Laba Kotor */}
-        <div className="flex items-center justify-between py-2.5 border-b-2 border-card-border bg-emerald-50/50 dark:bg-emerald-950/20 px-3 rounded-lg text-emerald-800 dark:text-emerald-300">
-          <span className="font-bold">(=) LABA KOTOR (Gross Profit)</span>
-          <span className="font-extrabold text-lg">
-            {formatCurrency(statement.grossProfit)}
-          </span>
-        </div>
-
-        {/* 4. Pengeluaran Operasional */}
-        <div className="flex items-center justify-between py-2 border-b border-card-border/60 text-text-secondary pl-4">
-          <span>(-) Total Biaya & Pengeluaran Operasional Toko</span>
-          <span className="font-semibold text-amber-600 dark:text-amber-400">
-            {formatCurrency(statement.totalExpenses)}
-          </span>
-        </div>
-
-        {/* 5. Laba Bersih */}
-        <div
-          className={`flex items-center justify-between p-4 rounded-xl border ${
-            isNetProfitPositive
-              ? "border-emerald-300 bg-emerald-100/60 dark:border-emerald-800 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200"
-              : "border-red-300 bg-red-100/60 dark:border-red-800 dark:bg-red-950/60 text-red-900 dark:text-red-200"
-          }`}
-        >
-          <div>
-            <span className="font-extrabold text-base block">(=) LABA BERSIH (Net Profit)</span>
-            <span className="text-xs opacity-80 font-sans">
-              {isNetProfitPositive ? "Toko Memperoleh Keuntungan Net" : "Toko Mengalami Kerugian Net"}
-            </span>
+            <p
+              className={`text-sm font-semibold tabular-nums sm:text-right ${
+                row.type === "subtotal"
+                  ? "text-base font-bold text-emerald-800 dark:text-emerald-300"
+                  : row.type === "loss"
+                    ? "text-red-700 dark:text-red-400"
+                    : "text-text-primary"
+              }`}
+            >
+              {formatCurrency(row.amount)}
+            </p>
           </div>
-          <span className="font-black text-2xl">
-            {formatCurrency(statement.netProfit)}
-          </span>
+        ))}
+      </div>
+
+      <div
+        className={`flex flex-col gap-2 rounded-xl border p-4 sm:flex-row sm:items-center sm:justify-between sm:p-5 ${
+          isNetProfitPositive
+            ? "border-emerald-300 bg-emerald-50/70 text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-200"
+            : "border-red-300 bg-red-50/70 text-red-900 dark:border-red-800 dark:bg-red-950/30 dark:text-red-200"
+        }`}
+      >
+        <div>
+          <h3 className="text-base font-extrabold">
+            (=) {isNetProfitPositive ? "LABA BERSIH" : "RUGI BERSIH"}
+          </h3>
+          <p className="mt-1 text-xs opacity-80">
+            {isNetProfitPositive
+              ? "Toko memperoleh keuntungan pada periode ini."
+              : "Pengeluaran dan kerugian melebihi pendapatan bersih."}
+          </p>
         </div>
+
+        <p className="text-2xl font-black tabular-nums sm:text-right">
+          {formatCurrency(netProfit)}
+        </p>
       </div>
     </Card>
   );

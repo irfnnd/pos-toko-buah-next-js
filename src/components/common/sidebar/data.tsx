@@ -15,6 +15,8 @@ export interface NavItem {
   url?: string;
   icon?: React.ReactNode;
   items?: NavItem[];
+  // Tambahkan properti roles untuk keperluan filter
+  roles?: ("ADMIN" | "KASIR")[]; 
 }
 
 export interface NavSection {
@@ -31,6 +33,7 @@ export const NAV_DATA: NavSection[] = [
         url: "/",
         icon: <HomeIcon />,
         items: [],
+        roles: ["ADMIN", "KASIR"],
       },
     ],
   },
@@ -42,36 +45,42 @@ export const NAV_DATA: NavSection[] = [
         url: "/users",
         icon: <UserGroupIcon />,
         items: [],
+        roles: ["ADMIN"],
       },
       {
         title: "Data Buah",
         url: "/buah",
         icon: <AlphabetIcon />,
         items: [],
+        roles: ["ADMIN"],
       },
       {
         title: "Data Supplier",
         url: "/supplier",
         icon: <UserIcon />,
         items: [],
+        roles: ["ADMIN"],
       },
       {
         title: "Data Stok",
         url: "/stok",
         icon: <Widget4Icon />,
         items: [],
+        roles: ["ADMIN", "KASIR"],
       },
       {
         title: "Kasir Apps",
         url: "/kasir",
         icon: <TaskIcon />,
         items: [],
+        roles: ["ADMIN", "KASIR"],
       },
       {
         title: "Data Transaksi",
         url: "/transaksi",
         icon: <TableIcon />,
         items: [],
+        roles: ["ADMIN", "KASIR"],
       },
     ],
   },
@@ -83,14 +92,15 @@ export const NAV_DATA: NavSection[] = [
         url: "/laporan/penjualan",
         icon: <InvoiceIcon />,
         items: [],
+        roles: ["ADMIN"],
       },
       {
         title: "Laporan Laba Rugi",
         url: "/laporan/laba-rugi",
         icon: <PieChartIcon />,
         items: [],
+        roles: ["ADMIN"],
       },
     ],
   },
 ];
-

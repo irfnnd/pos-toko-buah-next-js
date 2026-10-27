@@ -1,157 +1,139 @@
-# NextAdmin - AI-First Next.js Admin Dashboard Template
-**NextAdmin** is a free, open-source Next.js admin dashboard with essential UI components, blocks, pages, and multiple dashboards. Version 2.0 also ships AI rules and context files, so Claude Code, Cursor, Codex, and any other agent can read your project and build features that match your patterns instead of inventing their own.
+# POS Toko Buah
 
-[![nextjs admin template](nextadmin-v2.png)](https://nextadmin.co/)
+Aplikasi Point of Sale (POS) untuk toko buah dibangun dengan **Next.js 16**, **TypeScript**, **Tailwind CSS**, **Prisma ORM**, dan **PostgreSQL**.
+
+Fitur utama:
+
+- Kasir/POS penjualan buah.
+- Pengelolaan data buah, supplier, dan stok berbasis batch.
+- Masa simpan setiap stok buah dengan notifikasi buah yang mendekati/melewati masa simpan.
+- Konsep FEFO (First Expired, First Out) untuk pemilihan batch saat penjualan.
+- Pengelolaan transaksi dan laporan pen/labana.
+- Manajemen akun pengguna dengan role Admin dan Kasir.
 
 ---
 
-## What's new in v2.0
+## Prerequisites
 
-- Redesigned the entire dashboard with a modern look and better visual hierarchy
-- Replaced raw UI components with Tailgrids UI for consistent design and accessibility
-- Made all pages interactive and connected them to mock REST APIs
-- Restructured the codebase around deep modularity and added AI guidelines in `AGENTS.md`
-- Released AI `Agent Skills` for an AI native workflow
-- Released Custom Prompts to speed up development
+- Node.js 20+ (dengan npm atau pnpm)
+- PostgreSQL (lokal atau layanan cloud seperti Supabase / Neon)
 
-... and more, full list: [nextadmin.co/update-logs](https://nextadmin.co/update-logs)
+---
 
-## Useful Links
+## Instalasi
 
-- [Website](https://nextadmin.co/)
-- [Live Demo](https://demo.nextadmin.co/)
-- [Docs](https://nextadmin.co/docs)
-- [Components](https://nextadmin.co/components)
-- [AI](https://nextadmin.co/ai)
-- [Update Logs](https://nextadmin.co/update-logs)
-
-## What's inside
-
-- **Next.js 16 and Tailwind CSS** as the base, so the stack stays familiar
-- **200+ UI components** covering tables, forms, charts, cards, modals, and dashboard elements
-- **Pre-built pages** for login, signup, profile, settings, calendar, and more
-- **Multiple dashboards** for analytics, e-commerce, CRM, and marketing
-- **Dark and light mode** built in, with colors checked on both
-- **Figma design source** if you want to move things around before touching code
-- **Mock REST APIs** behind every page, shaped the way a real API would be
-
-Integrations already wired up: TailGrids UI, Recharts, Leaflet, TanStack Table, Zod, and FullCalendar.
-
-## Quick start
-
-You'll need Node.js installed. Then:
+1. Clone repository:
 
 ```bash
-git clone https://github.com/NextAdminHQ/nextjs-admin-dashboard.git
-cd nextjs-admin-dashboard
+git clone https://github.com/your-org/pos-toko-buah-next-js.git
+cd pos-toko-buah-next-js
 ```
 
-Install dependencies:
+2. Salin `.env.example` menjadi `.env` dan isi nilai yang sesuai:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` sesuai kebutuhan lingkungan Anda, minimal:
+
+- `DATABASE_URL` — k PostgreSQL yang valid.
+- `JWT_SECRET` — rahasia untuk menandatangani session JWT. Generate dengan `openssl rand -base64 48`.
+
+3. Install dependensi:
 
 ```bash
 npm install
 ```
 
-Then start the dev server:
+4. Siapkan database dan jalankan migration:
+
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
+
+5. Isi data awal (seed) untuk development:
+
+```bash
+npx prisma db seed
+```
+
+6. Jalankan server development:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) and you're good. **Happy coding**!
+Buka [http://localhost:3000](http://localhost:3000).
 
-## Working with AI agents
+---
 
-Open the project in Claude Code, Cursor, Codex, Copilot, or Zed. Your agent reads `AGENTS.md` and the skill files, then builds inside the structure that's already there, so folders, naming, and styling stay the same across sessions.
+## Konfigurasi Environment
 
-You can point an agent at an empty repo and ask for an admin dashboard, and it will get you something. The problem shows up on the second and third session, when it picks a different folder layout, a different auth approach, and styles components a little differently each time. You end up fixing patterns instead of shipping features.
+Lihat `.env.example` untuk daftar variabel lingkungan yang didukung.
 
-NextAdmin gives it a starting point that doesn't move. The components, the auth screens, the data shape, and the rules are already decided, so each session picks up where the last one left off.
+| Variabel | Keterangan |
+| --- | --- |
+| `DATABASE_URL` | K PostgreSQL (Prisma). Wajib. |
+| `JWT_SECRET` | Rahasia JWT untuk session. Wajib di produksi. |
+| `NODE_ENV` | Diatur otomatis oleh Next.js. |
+| `NEXT_PUBLIC_APP_URL` | URL aplikasi untuk redirect. |
 
-A few things worth knowing:
+---
 
-- **Agent Skills** give your agent the full picture of the components, design system, and file structure, so it doesn't start from zero
-- **React Aria skills** keep keyboard navigation, focus, and ARIA attributes correct after your agent edits a component
-- **The api-integration skill** swaps the mock data for your live endpoints from a single prompt
-- **Custom Prompts** cover the common jobs across core setup, layout, UI, and auth, ready to copy into your editor
+## Struktur Proyek
 
-## Deploying
+```
+src/
+  app/                  # Next.js App Router
+    (auth)/             # Halaman tanpa layout (login)
+    (dashboard)/        # Route group dengan layout utama
+      dashboard/ kasir/ buah/ supplier/ stok/ transaksi/ laporan/
+  components/           # Komponen reusable
+  lib/                  # db.ts, auth.ts, validations/, utils/
+  server/               # actions/ services/
+prisma/                # schema.prisma, seed.ts
+```
 
-Works out of the box with any provider supporting Next.js, including Vercel, Netlify, and Cloudflare.
+---
 
-## Docs
+## Menu Utama
 
-Full docs of the project are available at [nextadmin.co/docs](https://nextadmin.co/docs). There are machine-readable context files alongside them, so your AI tools can read the docs too.
+### Dashboard
+Ringkasan penjualan hari ini, transaksi, laba, stok, dan notifikasi masa simpan.
 
-## Pro
+### Operasional Toko
+1. User Account
+2. Data Buah
+3. Data Supplier
+4. Data Stok
+5. Kasir Apps
+6. Data Transaksi
 
-The free version covers most of what you need to get a dashboard running. If you want the full set of components, extra dashboards, and the Figma file, there's a Pro version at [nextadmin.co/pricing](https://nextadmin.co/pricing).
+### Laporan
+- Laporan Penjualan.
+- Laporan Laba Rugi.
 
-## Community
+---
 
-- [Discord](https://pimjo.com/community)
-- [X / Twitter](https://twitter.com/PimjoHQ)
-- [GitHub](https://github.com/NextAdminHQ/)
+## Pengembangan
 
-Issues and pull requests are welcome. If something is broken or missing, open an issue and we'll take a look.
+- **Lint**: `npm run lint`
+- **Test**: `npm run test`
+- **Build**: `npm run build`
 
-## Update Logs
+---
 
-### Version 2.0.0 - [July 20, 2026]
+## Keamanan
 
-- **Complete UI/UX Overhaul**: Redesigned the entire dashboard with a modern aesthetic and enhanced visual hierarchy.
-- **Design System Integration**: Replaced raw UI components with Tailgrids UI for improved design consistency and accessibility.
-- **Expanded Page & Component Library**: Added 10+ new pages and 20+ customizable component variants.
-- **Functional Mock API Integration**: Made all pages interactive and connected them with mock REST APIs.
-- **AI-Native Repository**: Optimized codebase architecture following deep modularity principles and added comprehensive AI guidelines in `AGENTS.md`.
-- **Custom Agent Skills & Accessibility**: Integrated `/api-integration` for instant API binding and `/react-aria` to enforce WCAG best practices and accessible UI primitives.
+- Password di-hash dengan bcrypt.
+- Session JWT ditandatangani dengan HS256 dan disimpan dalam cookie httpOnly.
+- Validasi input di server menggunakan Zod.
+- Authorization diperiksa di server, bukan hanya di frontend.
+- Jangan commit `.env`. `.env.example` sudah disediakan.
 
-### Version 1.3.0 - [May 14, 2026]
+---
 
-- Updated Next.js, Tailwind CSS, and all dependencies to their latest versions.
-- Replaced `next-auth` with `better-auth`.
-- Made authentication and authorization dynamic.
-- Added 2 Step verification, email verification, and password reset.
-- Added `Admin` plugin from `better-auth` for RBAC.
-- Replaced Algolia search with `cmdk`.
-- Improved ApexCharts hydration handling.
-- Moved utility files from `libs` into `utils`.
-- Fixed file and folder naming inconsistencies.
-- Reorganized environment variables and removed unused entries.
-- Renamed the unused proxy file to `example.proxy.ts` and fixed its import path.
-- Fixed modal position shift issues.
-- Improved responsiveness across marketing, CRM, profile, manage team, tables, and not found pages.
-
-### Version 1.2.3 - [Mar 16, 2026]
-
-- Update Next.js to ^16.1.6 and configure image qualities
-
-### Version 1.2.2 - [Dec 01, 2025]
-
-- Updated to Next.js 16
-- Updated all the dependencies.
-
-### Version 1.2.1 - Fix peer dependency issue - [Mar 19, 2025]
-
-- Fixed peer dependency issue with React 19
-- Migrated from `react-table` to `@tanstack/react-table`
-- Fixed reference error in `top-countries/map.tsx` component
-
-### Version 1.2.0 - Major Upgrade and UI Improvements - [Jan 27, 2025]
-
-- Upgraded to Next.js v15 and updated dependencies
-- API integration with loading skeleton for tables and charts.
-- Improved code structure for better readability.
-- Rebuilt components like dropdown, modals, and all ui-elements using accessibility practices.
-- Using search-params to store dropdown selection and refetch data.
-- Semantic markups, better separation of concerns and more.
-
-### Version 1.1.0 - Initial Release - [May 13, 2024]
-
-- Updated Dependencies
-- Removed Unused Integrations
-- Optimized App
-
-### Version 1.0.0 - Initial Release - [May 13, 2024]
-
-- Initial release
+## License
+Lihat `LICENSE` untuk detail lisensi.

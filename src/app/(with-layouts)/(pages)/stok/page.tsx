@@ -16,6 +16,7 @@ import {
   getStockBatchesAction,
   getStockMovementsAction,
 } from "@/server/actions/stok";
+import { getCurrentUserAction } from "@/server/actions/auth";
 import { ExpiryStatus, Fruit, MovementType, StockBatch, StockMovement, Supplier } from "@prisma/client";
 import { BoxArchive1, ClockThree as ClockIcon } from "@tailgrids/icons";
 
@@ -32,6 +33,7 @@ type MovementWithRelations = StockMovement & {
 
 export default function StokPage() {
   const [activeTab, setActiveTab] = useState<"batches" | "movements">("batches");
+  const [userRole, setUserRole] = useState<string>("ADMIN");
 
   // Master Data State
   const [fruits, setFruits] = useState<Fruit[]>([]);
@@ -69,6 +71,17 @@ export default function StokPage() {
       }
     };
     fetchMasters();
+  }, []);
+
+  // Fetch current user role
+  useEffect(() => {
+    const fetchRole = async () => {
+      const user = await getCurrentUserAction();
+      if (user?.role) {
+        setUserRole(user.role);
+      }
+    };
+    fetchRole();
   }, []);
 
   // Fetch Batches / Movements
@@ -228,12 +241,14 @@ export default function StokPage() {
             suppliers={suppliers}
             onAddStockInClick={handleOpenStockIn}
             onAddStockOutClick={() => handleOpenStockOut()}
+            userRole={userRole}
           />
 
           <StokBatchTable
             batches={batches}
             onStockOutClick={(batch) => handleOpenStockOut(batch)}
             isLoading={isLoading}
+            userRole={userRole}
           />
         </>
       ) : (

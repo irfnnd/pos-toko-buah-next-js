@@ -8,6 +8,7 @@ import { Button } from "@/components/tailgrids/core/button";
 import { getProfitLossReport } from "@/server/actions/laporan";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 
 export default function LaporanLabaRugiPage() {
   const [datePreset, setDatePreset] = useState("thisMonth");
@@ -16,15 +17,25 @@ export default function LaporanLabaRugiPage() {
 
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-
   const [report, setReport] = useState<any>({
     statement: {
       totalSales: 0,
       totalCostOfGoods: 0,
       grossProfit: 0,
+      totalStockLoss: 0,
+      expiredLoss: 0,
+      damagedLoss: 0,
       totalExpenses: 0,
       netProfit: 0,
     },
+    stockLossSummary: {
+      expiredQuantity: 0,
+      damagedQuantity: 0,
+      expiredLoss: 0,
+      damagedLoss: 0,
+      totalStockLoss: 0,
+    },
+    stockLossDetails: [],
     expenseBreakdown: [],
     expenses: [],
     salesCount: 0,
@@ -54,7 +65,95 @@ export default function LaporanLabaRugiPage() {
     setStartDate("");
     setEndDate("");
   };
+  const handleExportExcel = () => {
+    try {
+      const statement = report.statement;
 
+      const summaryData = [
+        ["LAPORAN LABA RUGI TOKO BUAH"],
+        ["Periode", getPeriodLabel()],
+        [],
+        ["Keterangan", "Jumlah (Rp)"],
+        ["Pendapatan Penjualan", statement.totalSales],
+        ["Harga Pokok Penjualan (HPP)", statement.totalCostOfGoods],
+        ["Laba Kotor", statement.grossProfit],
+        ["Kerugian Stok Buah Busuk/Rusak", statement.totalStockLoss ?? 0],
+        ["Biaya Operasional", statement.totalExpenses],
+        ["Laba/Rugi Bersih", statement.netProfit],
+        ["Jumlah Transaksi", report.salesCount],
+      ];
+
+      const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+      summarySheet["!cols"] = [{ wch: 40 }, { wch: 22 }];
+
+      ["B5", "B6", "B7", "B8", "B9", "B10"].forEach((cell) => {
+        if (summarySheet[cell]) {
+          summarySheet[cell].z = '"Rp" #,##0;[Red]-"Rp" #,##0';
+        }
+      });
+
+      const expenseRows = Array.isArray(report.expenses)
+        ? report.expenses
+        : [];
+
+      const expenseSheet =
+        expenseRows.length > 0
+          ? XLSX.utils.json_to_sheet(expenseRows)
+          : XLSX.utils.aoa_to_sheet([
+              ["Tidak ada biaya operasional pada periode ini."],
+            ]);
+
+      const breakdownRows = Array.isArray(report.expenseBreakdown)
+        ? report.expenseBreakdown
+        : [];
+
+      const breakdownSheet =
+        breakdownRows.length > 0
+          ? XLSX.utils.json_to_sheet(breakdownRows)
+          : XLSX.utils.aoa_to_sheet([
+              ["Tidak ada rincian kategori biaya."],
+            ]);
+
+      const workbook = XLSX.utils.book_new();
+
+      XLSX.utils.book_append_sheet(workbook, summarySheet, "Laba Rugi");
+      XLSX.utils.book_append_sheet(workbook, expenseSheet, "Biaya Operasional");
+      XLSX.utils.book_append_sheet(workbook, breakdownSheet, "Kategori Biaya");
+
+      XLSX.writeFile(
+        workbook,
+        `laporan-laba-rugi-${getFilenamePeriod()}.xlsx`,
+      );
+
+      toast.success("Laporan Excel berhasil diekspor.");
+    } catch (error) {
+      console.error("Gagal mengekspor laporan:", error);
+      toast.error("Gagal mengekspor laporan ke Excel.");
+    }
+  };
+
+  const getPeriodLabel = () => {
+    switch (datePreset) {
+      case "today":
+        return "Hari Ini";
+      case "7days":
+        return "7 Hari Terakhir";
+      case "thisMonth":
+        return "Bulan Ini";
+      case "custom":
+        return `${startDate || "-"} s/d ${endDate || "-"}`;
+      default:
+        return "Semua Periode";
+    }
+  };
+
+  const getFilenamePeriod = () => {
+    if (datePreset === "custom") {
+      return `${startDate || "awal"}-sampai-${endDate || "akhir"}`;
+    }
+
+    return `${datePreset}-${new Date().toISOString().slice(0, 10)}`;
+  };
   return (
     <div className="mt-6 space-y-6 px-2 lg:px-6 mb-12">
       {/* Header */}
@@ -90,6 +189,14 @@ export default function LaporanLabaRugiPage() {
               className="gap-2 text-xs font-medium text-text-secondary"
             >
               Reset
+            </Button>
+            <Button
+              onClick={handleExportExcel}
+              appearance="outline"
+              size="sm"
+              className="gap-2"
+            >
+              Export Excel
             </Button>
           </div>
         </div>

@@ -19,7 +19,49 @@ export interface LaporanFilterOptions {
   cashierId?: string;
   paymentMethod?: string;
 }
+function getReportDateRange(filters: LaporanFilterOptions) {
+  const {
+    datePreset = "thisMonth",
+    startDate,
+    endDate,
+  } = filters;
 
+  const now = new Date();
+  let fromDate: Date | null = null;
+  let toDate: Date | null = null;
+
+  if (datePreset === "today") {
+    fromDate = startOfDay(now);
+    toDate = endOfDay(now);
+  } else if (datePreset === "7days") {
+    fromDate = startOfDay(subDays(now, 6));
+    toDate = endOfDay(now);
+  } else if (datePreset === "thisMonth") {
+    fromDate = startOfMonth(now);
+    toDate = endOfMonth(now);
+  } else if (datePreset === "custom" && (startDate || endDate)) {
+    if (startDate) {
+      fromDate = startOfDay(new Date(startDate));
+    }
+    if (endDate) {
+      toDate = endOfDay(new Date(endDate));
+    }
+  }
+
+  const where: {
+    gte?: Date;
+    lte?: Date;
+  } = {};
+
+  if (fromDate) where.gte = fromDate;
+  if (toDate) where.lte = toDate;
+
+  return {
+    fromDate,
+    toDate,
+    dateFilter: fromDate || toDate ? where : undefined,
+  };
+}
 export async function getSalesReport(filters: LaporanFilterOptions = {}) {
   const {
     datePreset = "thisMonth",
@@ -65,7 +107,49 @@ export async function getSalesReport(filters: LaporanFilterOptions = {}) {
   if (paymentMethod && paymentMethod !== "all") {
     whereClause.paymentMethod = paymentMethod as PaymentMethod;
   }
+  const { dateFilter } = getReportDateRange(filters);
 
+  const stockMovements = await db.stockMovement.findMany({
+    where: {
+      type: {
+        in: [
+          "OUT_SALE",
+          "OUT_EXPIRED",
+          "OUT_DAMAGED",
+          "OUT_ADJUSTMENT",
+        ],
+      },
+      ...(dateFilter
+        ? { createdAt: dateFilter }
+        : {}),
+    },
+    include: {
+      fruit: {
+        select: {
+          id: true,
+          code: true,
+          name: true,
+          unit: true,
+          defaultBuyPrice: true,
+        },
+      },
+      stockBatch: {
+        select: {
+          id: true,
+          batchNumber: true,
+          buyPrice: true,
+        },
+      },
+      createdBy: {
+        select: {
+          name: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
   // Fetch Sales & Items
   const sales = await db.sale.findMany({
     where: whereClause,
@@ -142,7 +226,49 @@ export async function getSalesReport(filters: LaporanFilterOptions = {}) {
   const topFruits = Array.from(fruitSalesMap.values())
     .sort((a, b) => b.totalRevenue - a.totalRevenue)
     .slice(0, 5);
+  const stockOutSummary = {
+    totalQuantity: 0,
+    saleQuantity: 0,
+    expiredQuantity: 0,
+    damagedQuantity: 0,
+    adjustmentQuantity: 0,
+    expiredLoss: 0,
+    damagedLoss: 0,
+  };
 
+  for (const movement of stockMovements) {
+    const quantity = Math.abs(movement.quantity);
+
+    stockOutSummary.totalQuantity += quantity;
+
+    if (movement.type === "OUT_SALE") {
+      stockOutSummary.saleQuantity += quantity;
+    }
+
+    if (movement.type === "OUT_EXPIRED") {
+      stockOutSummary.expiredQuantity += quantity;
+
+      const buyPrice =
+        movement.stockBatch?.buyPrice ??
+        movement.fruit.defaultBuyPrice;
+
+      stockOutSummary.expiredLoss += quantity * buyPrice;
+    }
+
+    if (movement.type === "OUT_DAMAGED") {
+      stockOutSummary.damagedQuantity += quantity;
+
+      const buyPrice =
+        movement.stockBatch?.buyPrice ??
+        movement.fruit.defaultBuyPrice;
+
+      stockOutSummary.damagedLoss += quantity * buyPrice;
+    }
+
+    if (movement.type === "OUT_ADJUSTMENT") {
+      stockOutSummary.adjustmentQuantity += quantity;
+    }
+  }
   return {
     summary: {
       totalSales,
@@ -155,56 +281,79 @@ export async function getSalesReport(filters: LaporanFilterOptions = {}) {
     paymentDistribution,
     topFruits,
     sales,
+    stockOutSummary,
+    stockMovements,
   };
 }
 
-export async function getProfitLossReport(filters: LaporanFilterOptions = {}) {
-  const { datePreset = "thisMonth", startDate, endDate } = filters;
 
-  const now = new Date();
-  let fromDate: Date | null = null;
-  let toDate: Date | null = null;
+export async function getProfitLossReport(
+  filters: LaporanFilterOptions = {}
+) {
+  const { dateFilter } = getReportDateRange(filters);
 
-  if (datePreset === "today") {
-    fromDate = startOfDay(now);
-    toDate = endOfDay(now);
-  } else if (datePreset === "7days") {
-    fromDate = startOfDay(subDays(now, 6));
-    toDate = endOfDay(now);
-  } else if (datePreset === "thisMonth") {
-    fromDate = startOfMonth(now);
-    toDate = endOfMonth(now);
-  } else if (datePreset === "custom" && (startDate || endDate)) {
-    if (startDate) fromDate = startOfDay(new Date(startDate));
-    if (endDate) toDate = endOfDay(new Date(endDate));
+  const saleWhereClause: any = {
+    status: SaleStatus.COMPLETED,
+  };
+
+  if (dateFilter) {
+    saleWhereClause.saleDate = dateFilter;
   }
 
-  const saleWhereClause: any = { status: SaleStatus.COMPLETED };
   const expenseWhereClause: any = {};
 
-  if (fromDate || toDate) {
-    saleWhereClause.saleDate = {};
-    expenseWhereClause.date = {};
-    if (fromDate) {
-      saleWhereClause.saleDate.gte = fromDate;
-      expenseWhereClause.date.gte = fromDate;
-    }
-    if (toDate) {
-      saleWhereClause.saleDate.lte = toDate;
-      expenseWhereClause.date.lte = toDate;
-    }
+  if (dateFilter) {
+    expenseWhereClause.date = dateFilter;
   }
 
-  const [sales, expenses] = await Promise.all([
+  const stockMovementWhereClause: any = {
+    type: {
+      in: ["OUT_EXPIRED", "OUT_DAMAGED"],
+    },
+  };
+
+  if (dateFilter) {
+    stockMovementWhereClause.createdAt = dateFilter;
+  }
+
+  const [sales, expenses, stockMovements] = await Promise.all([
     db.sale.findMany({
       where: saleWhereClause,
       include: {
         items: true,
       },
     }),
+
     db.expense.findMany({
       where: expenseWhereClause,
-      orderBy: { date: "desc" },
+      orderBy: {
+        date: "desc",
+      },
+    }),
+
+    db.stockMovement.findMany({
+      where: stockMovementWhereClause,
+      include: {
+        fruit: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+            unit: true,
+            defaultBuyPrice: true,
+          },
+        },
+        stockBatch: {
+          select: {
+            id: true,
+            batchNumber: true,
+            buyPrice: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     }),
   ]);
 
@@ -213,6 +362,7 @@ export async function getProfitLossReport(filters: LaporanFilterOptions = {}) {
 
   for (const sale of sales) {
     totalSales += sale.totalAmount;
+
     for (const item of sale.items) {
       totalCostOfGoods += item.costTotal || 0;
     }
@@ -220,19 +370,71 @@ export async function getProfitLossReport(filters: LaporanFilterOptions = {}) {
 
   const grossProfit = totalSales - totalCostOfGoods;
 
-  // Expense Categories breakdown
+  // Total pengeluaran operasional
   const categoryMap = new Map<string, number>();
   let totalExpenses = 0;
 
   for (const exp of expenses) {
     totalExpenses += exp.amount;
-    const cat = exp.category || "Operasional";
-    categoryMap.set(cat, (categoryMap.get(cat) || 0) + exp.amount);
+
+    const category = exp.category || "Operasional";
+
+    categoryMap.set(
+      category,
+      (categoryMap.get(category) || 0) + exp.amount
+    );
   }
 
-  const netProfit = grossProfit - totalExpenses;
+  // Kerugian stok busuk dan rusak
+  let totalStockLoss = 0;
+  let expiredLoss = 0;
+  let damagedLoss = 0;
+  let expiredQuantity = 0;
+  let damagedQuantity = 0;
 
-  const expenseBreakdown = Array.from(categoryMap.entries()).map(([category, total]) => ({
+  const stockLossDetails = stockMovements.map((movement) => {
+    const quantity = Math.abs(movement.quantity);
+
+    // Gunakan harga modal batch; gunakan harga modal default
+    // buah jika batch sudah tidak tersedia.
+    const buyPrice =
+      movement.stockBatch?.buyPrice ??
+      movement.fruit.defaultBuyPrice;
+
+    const loss = quantity * buyPrice;
+
+    totalStockLoss += loss;
+
+    if (movement.type === "OUT_EXPIRED") {
+      expiredLoss += loss;
+      expiredQuantity += quantity;
+    } else if (movement.type === "OUT_DAMAGED") {
+      damagedLoss += loss;
+      damagedQuantity += quantity;
+    }
+
+    return {
+      id: movement.id,
+      date: movement.createdAt,
+      fruitName: movement.fruit.name,
+      fruitCode: movement.fruit.code,
+      type: movement.type,
+      quantity,
+      unit: movement.unit,
+      buyPrice,
+      loss,
+      batchNumber: movement.stockBatch?.batchNumber ?? "-",
+      note: movement.note,
+    };
+  });
+
+  // Kerugian stok dikurangi satu kali dari laba bersih.
+  const netProfit =
+    grossProfit - totalExpenses - totalStockLoss;
+
+  const expenseBreakdown = Array.from(
+    categoryMap.entries()
+  ).map(([category, total]) => ({
     category,
     total,
   }));
@@ -243,8 +445,21 @@ export async function getProfitLossReport(filters: LaporanFilterOptions = {}) {
       totalCostOfGoods,
       grossProfit,
       totalExpenses,
+      totalStockLoss,
+      expiredLoss,
+      damagedLoss,
       netProfit,
     },
+
+    stockLossSummary: {
+      expiredQuantity,
+      damagedQuantity,
+      expiredLoss,
+      damagedLoss,
+      totalStockLoss,
+    },
+
+    stockLossDetails,
     expenseBreakdown,
     expenses,
     salesCount: sales.length,
