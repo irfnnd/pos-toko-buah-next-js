@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { getRemainingDays } from "@/lib/utils/expiry";
 import { BoxArchive1, Minus, InfoTriangle, CheckCircle1, XmarkCircle } from "@tailgrids/icons";
+import { TablePagination } from "@/components/common/table-pagination";
 
 type StockBatchWithRelations = StockBatch & {
   fruit: Fruit;
@@ -18,9 +19,23 @@ interface StokBatchTableProps {
   onStockOutClick: (batch: StockBatchWithRelations) => void;
   isLoading?: boolean;
   userRole?: string;
+  pagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
-export function StokBatchTable({ batches, onStockOutClick, isLoading, userRole = "ADMIN" }: StokBatchTableProps) {
+export function StokBatchTable({
+  batches,
+  onStockOutClick,
+  isLoading,
+  userRole = "ADMIN",
+  pagination,
+  onPageChange,
+}: StokBatchTableProps) {
   const canModify = userRole === "ADMIN";
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("id-ID", {
@@ -172,6 +187,18 @@ export function StokBatchTable({ batches, onStockOutClick, isLoading, userRole =
           })}
         </tbody>
       </table>
+
+      {pagination && onPageChange && (
+        <TablePagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.limit}
+          itemLabel="batch stok"
+          onPageChange={onPageChange}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

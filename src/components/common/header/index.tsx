@@ -1,7 +1,6 @@
 "use client";
 
 import { MenuIcon } from "@/components/common/header/icons";
-import ThemeToggle from "@/components/common/header/theme-toggle";
 import { UserProfileButton } from "@/components/common/header/user-profile";
 import { ThreeDots } from "@/components/common/sidebar/icon";
 import { cn } from "@/utils/cn";
@@ -58,12 +57,11 @@ export default function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <div className="hidden items-center justify-between xl:flex">
           {/* Left Side - Search */}
           <div className="max-w-xs flex-1">
-            <SearchBar />
+            {/* <SearchBar /> */}
           </div>
 
           {/* Right Side - Actions */}
           <div className="flex items-center gap-2.5">
-            <ThemeToggle />
             <NotificationBell />
             <UserProfileButton />
           </div>
@@ -84,7 +82,6 @@ function MobileInfoDrawer({ isOpen }: { isOpen: boolean }) {
         <div className="flex items-center justify-between gap-2.5">
           <div className="flex items-center gap-2.5">
             <NotificationBell />
-            <ThemeToggle />
             <SearchBar />
           </div>
 

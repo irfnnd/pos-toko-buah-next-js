@@ -21,6 +21,9 @@ export async function getStockBatchesAction(params?: {
   fruitId?: string;
   supplierId?: string;
   status?: ExpiryStatus | "ALL";
+  page?: number;
+  limit?: number;
+  all?: boolean;
 }) {
   await requireAuth();
 
@@ -28,29 +31,38 @@ export async function getStockBatchesAction(params?: {
   const fruitId = params?.fruitId;
   const supplierId = params?.supplierId;
   const status = params?.status;
+  const page = Math.max(1, params?.page || 1);
+  const limit = Math.max(1, params?.limit || 10);
+  const fetchAll = params?.all ?? false;
+
+  const whereClause = {
+    ...(search
+      ? {
+          OR: [
+            { batchNumber: { contains: search, mode: "insensitive" as const } },
+            { fruit: { name: { contains: search, mode: "insensitive" as const } } },
+            { fruit: { code: { contains: search, mode: "insensitive" as const } } },
+          ],
+        }
+      : {}),
+    ...(fruitId ? { fruitId } : {}),
+    ...(supplierId ? { supplierId } : {}),
+    ...(status && status !== "ALL" ? { status } : {}),
+  };
 
   try {
-    const batches = await db.stockBatch.findMany({
-      where: {
-        ...(search
-          ? {
-              OR: [
-                { batchNumber: { contains: search, mode: "insensitive" } },
-                { fruit: { name: { contains: search, mode: "insensitive" } } },
-                { fruit: { code: { contains: search, mode: "insensitive" } } },
-              ],
-            }
-          : {}),
-        ...(fruitId ? { fruitId } : {}),
-        ...(supplierId ? { supplierId } : {}),
-        ...(status && status !== "ALL" ? { status } : {}),
-      },
-      include: {
-        fruit: true,
-        supplier: true,
-      },
-      orderBy: { expiryDate: "asc" }, // FEFO First Expired, First Out
-    });
+    const [totalCount, batches] = await Promise.all([
+      db.stockBatch.count({ where: whereClause }),
+      db.stockBatch.findMany({
+        where: whereClause,
+        include: {
+          fruit: true,
+          supplier: true,
+        },
+        orderBy: { createdAt: "desc" }, // Diurutkan berdasarkan data terbaru
+        ...(fetchAll ? {} : { skip: (page - 1) * limit, take: limit }),
+      }),
+    ]);
 
     // Dynamically verify and update expiry statuses if day has changed
     const updatedBatches = await Promise.all(
@@ -67,10 +79,32 @@ export async function getStockBatchesAction(params?: {
       })
     );
 
-    return { success: true, data: updatedBatches, error: undefined as string | undefined };
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+      success: true,
+      data: updatedBatches,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+      },
+      error: undefined as string | undefined,
+    };
   } catch (error) {
     console.error("Get stock batches error:", error);
-    return { success: false, data: [], error: "Gagal mengambil data batch stok" };
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit,
+        totalCount: 0,
+        totalPages: 1,
+      },
+      error: "Gagal mengambil data batch stok",
+    };
   }
 }
 
@@ -237,41 +271,75 @@ export async function getStockMovementsAction(params?: {
   search?: string;
   type?: MovementType | "ALL";
   fruitId?: string;
+  page?: number;
+  limit?: number;
+  all?: boolean;
 }) {
   await requireAuth();
 
   const search = params?.search?.trim();
   const type = params?.type;
   const fruitId = params?.fruitId;
+  const page = Math.max(1, params?.page || 1);
+  const limit = Math.max(1, params?.limit || 10);
+  const fetchAll = params?.all ?? false;
+
+  const whereClause = {
+    ...(search
+      ? {
+          OR: [
+            { referenceNo: { contains: search, mode: "insensitive" as const } },
+            { note: { contains: search, mode: "insensitive" as const } },
+            { fruit: { name: { contains: search, mode: "insensitive" as const } } },
+          ],
+        }
+      : {}),
+    ...(type && type !== "ALL" ? { type } : {}),
+    ...(fruitId ? { fruitId } : {}),
+  };
 
   try {
-    const movements = await db.stockMovement.findMany({
-      where: {
-        ...(search
-          ? {
-              OR: [
-                { referenceNo: { contains: search, mode: "insensitive" } },
-                { note: { contains: search, mode: "insensitive" } },
-                { fruit: { name: { contains: search, mode: "insensitive" } } },
-              ],
-            }
-          : {}),
-        ...(type && type !== "ALL" ? { type } : {}),
-        ...(fruitId ? { fruitId } : {}),
-      },
-      include: {
-        fruit: true,
-        stockBatch: true,
-        createdBy: {
-          select: { name: true, username: true },
+    const [totalCount, movements] = await Promise.all([
+      db.stockMovement.count({ where: whereClause }),
+      db.stockMovement.findMany({
+        where: whereClause,
+        include: {
+          fruit: true,
+          stockBatch: true,
+          createdBy: {
+            select: { name: true, username: true },
+          },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+        orderBy: { createdAt: "desc" },
+        ...(fetchAll ? {} : { skip: (page - 1) * limit, take: limit }),
+      }),
+    ]);
 
-    return { success: true, data: movements, error: undefined as string | undefined };
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+      success: true,
+      data: movements,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+      },
+      error: undefined as string | undefined,
+    };
   } catch (error) {
     console.error("Get stock movements error:", error);
-    return { success: false, data: [], error: "Gagal mengambil riwayat pergerakan stok" };
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit,
+        totalCount: 0,
+        totalPages: 1,
+      },
+      error: "Gagal mengambil riwayat pergerakan stok",
+    };
   }
 }

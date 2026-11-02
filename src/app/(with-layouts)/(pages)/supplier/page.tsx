@@ -24,9 +24,16 @@ export default function SupplierPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  // Filters
+  // Filters & Pagination
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,10 +45,15 @@ export default function SupplierPage() {
       const res = await getSuppliersAction({
         search: search || undefined,
         status: statusFilter !== "ALL" ? (statusFilter as "ACTIVE" | "INACTIVE") : undefined,
+        page,
+        limit: 10,
       });
 
       if (res.success && res.data) {
         setSuppliers(res.data as SupplierWithCount[]);
+        if (res.pagination) {
+          setPagination(res.pagination);
+        }
       } else {
         toast.error(res.error || "Gagal mengambil data supplier");
       }
@@ -57,7 +69,7 @@ export default function SupplierPage() {
       fetchSuppliers();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, page]);
 
   const handleOpenAdd = () => {
     setEditingSupplier(null);
@@ -151,9 +163,15 @@ export default function SupplierPage() {
 
       <SupplierFilter
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={(val) => {
+          setStatusFilter(val);
+          setPage(1);
+        }}
         onAddClick={handleOpenAdd}
       />
 
@@ -163,6 +181,8 @@ export default function SupplierPage() {
         onToggleStatus={handleToggleStatus}
         onDelete={handleDeleteSupplier}
         isLoading={isLoading}
+        pagination={pagination}
+        onPageChange={(p) => setPage(p)}
       />
 
       <SupplierFormModal

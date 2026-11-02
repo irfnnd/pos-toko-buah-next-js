@@ -1,60 +1,11 @@
 export type IconProps = React.SVGProps<SVGSVGElement>;
-
+import Image from 'next/image';
 export const Logo = (props: IconProps) => {
-    return (
-        <svg
-            width={32}
-            height={32}
-            viewBox='0 0 32 32'
-            fill='none'
-            xmlns='http://www.w3.org/2000/svg'
-            {...props}
-        >
-            <rect width="32" height="32" rx="9" fill="url(#fruit_logo_grad)" />
-            {/* Fruit Leaf */}
-            <path
-                d="M17.5 7.5C17.5 7.5 20.5 8.2 21 11C19 11.5 17 10 17 10L17.5 7.5Z"
-                fill="#34D399"
-            />
-            {/* Stem */}
-            <path
-                d="M15.5 11.5C16 9.5 17 8 17.5 7.5"
-                stroke="#047857"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-            />
-            {/* Orange Fruit Body */}
-            <circle cx="16" cy="19" r="8" fill="#FB923C" />
-            <circle cx="16" cy="19" r="8" fill="url(#fruit_orange_grad)" opacity="0.9" />
-            {/* Gloss / Highlight */}
-            <path
-                d="M13 14.5C14.2 13.6 16.5 13.5 18 14"
-                stroke="#FFFFFF"
-                strokeWidth="1.2"
-                strokeLinecap="round"
-                opacity="0.6"
-            />
-            {/* Fruit Slice Accent Detail */}
-            <path
-                d="M12.5 19.5C12.5 17.5 14 16 16 16C18 16 19.5 17.5 19.5 19.5"
-                stroke="#FFFFFF"
-                strokeWidth="1"
-                strokeLinecap="round"
-                strokeDasharray="1 2"
-                opacity="0.5"
-            />
-            <defs>
-                <linearGradient id="fruit_logo_grad" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#059669" />
-                    <stop offset="1" stopColor="#10B981" />
-                </linearGradient>
-                <linearGradient id="fruit_orange_grad" x1="8" y1="11" x2="24" y2="27" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#F97316" />
-                    <stop offset="1" stopColor="#EA580C" />
-                </linearGradient>
-            </defs>
-        </svg>
-    );
+return (
+    <span className='rounded-md bg-emerald-500 px-1.5 py-0.5 text-[15px] font-extrabold uppercase tracking-wider text-white shadow-xs'>
+                    POS
+                </span>
+);
 };
 
 export const LogoText = (props: IconProps) => {
@@ -76,7 +27,7 @@ export const LogoText = (props: IconProps) => {
                 fontFamily="sans-serif"
                 letterSpacing="-0.5"
             >
-                Toko Buah
+                TOKO BUAH
             </text>
             <rect x="85" y="4" width="32" height="16" rx="4" fill="#10B981" />
             <text
@@ -97,16 +48,23 @@ export const LogoText = (props: IconProps) => {
 export const LogoWithText = (props: IconProps) => {
     return (
         <div className='flex items-center gap-2.5 select-none'>
-            <Logo {...props} />
+        <Logo {...props} />
+        <div className='flex flex-col items-start'>
             <div className='flex items-center gap-1.5'>
-                <span className='text-base font-bold tracking-tight text-zinc-900 dark:text-white'>
-                    Toko Buah
+                <span className='font-bold text-text-primary tracking-tight text-zinc-900 dark:text-white leading-none'>
+                    Toko Buah Anton
                 </span>
-                <span className='rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs'>
-                    POS
-                </span>
+                {/* Jika badge/label ini mau diaktifkan lagi, letaknya akan berada di sebelah teks utama */}
+                {/* <span className='rounded-md bg-emerald-500 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-white shadow-xs'>
+                    ANTON
+                </span> */}
             </div>
+            {/* Teks kecil di bawahnya */}
+            <span className='text-xs text-zinc-500 dark:text-zinc-400 mt-0.5'>
+                Point Of Sales
+            </span>
         </div>
+    </div>
     );
 };
 

@@ -7,6 +7,7 @@ import { Eye, Printer, XmarkCircle } from "@tailgrids/icons";
 import { PaymentMethod, SaleStatus } from "@prisma/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { TablePagination } from "@/components/common/table-pagination";
 
 interface TransaksiTableProps {
   sales: any[];
@@ -178,36 +179,16 @@ export function TransaksiTable({
       </div>
 
       {/* Pagination Footer */}
-      {!isLoading && pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between border-t border-card-border px-5 py-3.5 text-xs text-text-tertiary">
-          <div>
-            Menampilkan <span className="font-semibold text-text-primary">{sales.length}</span> dari{" "}
-            <span className="font-semibold text-text-primary">{pagination.totalCount}</span> transaksi
-          </div>
-          <div className="flex items-center gap-1">
-            <Button
-              size="sm"
-              appearance="outline"
-              isDisabled={pagination.page <= 1}
-              onClick={() => onPageChange(pagination.page - 1)}
-              className="text-xs px-2.5 py-1"
-            >
-              Sebelumnya
-            </Button>
-            <span className="px-2 font-medium text-text-primary">
-              {pagination.page} / {pagination.totalPages}
-            </span>
-            <Button
-              size="sm"
-              appearance="outline"
-              isDisabled={pagination.page >= pagination.totalPages}
-              onClick={() => onPageChange(pagination.page + 1)}
-              className="text-xs px-2.5 py-1"
-            >
-              Selanjutnya
-            </Button>
-          </div>
-        </div>
+      {!isLoading && (
+        <TablePagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.limit}
+          itemLabel="transaksi"
+          onPageChange={onPageChange}
+          isLoading={isLoading}
+        />
       )}
     </Card>
   );

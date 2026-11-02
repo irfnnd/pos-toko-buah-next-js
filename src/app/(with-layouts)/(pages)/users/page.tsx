@@ -29,10 +29,17 @@ export default function UsersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  // Filters
+  // Filters & Pagination
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,10 +52,15 @@ export default function UsersPage() {
         search: search || undefined,
         role: roleFilter !== "ALL" ? (roleFilter as "ADMIN" | "KASIR") : undefined,
         status: statusFilter !== "ALL" ? (statusFilter as "ACTIVE" | "INACTIVE") : undefined,
+        page,
+        limit: 10,
       });
 
       if (res.success && res.data) {
         setUsers(res.data as SafeUser[]);
+        if (res.pagination) {
+          setPagination(res.pagination);
+        }
       } else {
         toast.error(res.error || "Gagal mengambil data pengguna");
       }
@@ -64,7 +76,7 @@ export default function UsersPage() {
       fetchUsers();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, roleFilter, statusFilter]);
+  }, [search, roleFilter, statusFilter, page]);
 
   const handleOpenAdd = () => {
     setEditingUser(null);
@@ -157,11 +169,20 @@ export default function UsersPage() {
 
       <UserFilter
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
         roleFilter={roleFilter}
-        onRoleFilterChange={setRoleFilter}
+        onRoleFilterChange={(val) => {
+          setRoleFilter(val);
+          setPage(1);
+        }}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={(val) => {
+          setStatusFilter(val);
+          setPage(1);
+        }}
         onAddClick={handleOpenAdd}
       />
 
@@ -171,6 +192,8 @@ export default function UsersPage() {
         onToggleStatus={handleToggleStatus}
         onDelete={handleDeleteUser}
         isLoading={isLoading}
+        pagination={pagination}
+        onPageChange={(p) => setPage(p)}
       />
 
       <UserFormModal

@@ -6,6 +6,7 @@ import { Fruit } from "@prisma/client";
 import { PenToSquare, Trash1, Reload, AppleBrandIcon, InfoTriangle } from "@tailgrids/icons";
 import { useState } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
+import { TablePagination } from "@/components/common/table-pagination";
 
 type FruitWithCount = Fruit & {
   _count?: { batches: number };
@@ -17,9 +18,24 @@ interface FruitTableProps {
   onToggleStatus: (fruitId: string) => void;
   onDelete: (fruitId: string) => void;
   isLoading?: boolean;
+  pagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
-export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading }: FruitTableProps) {
+export function FruitTable({
+  fruits,
+  onEdit,
+  onToggleStatus,
+  onDelete,
+  isLoading,
+  pagination,
+  onPageChange,
+}: FruitTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<FruitWithCount | null>(null);
 
   const confirmDelete = () => {
@@ -174,6 +190,18 @@ export function FruitTable({ fruits, onEdit, onToggleStatus, onDelete, isLoading
             })}
           </tbody>
         </table>
+
+        {pagination && onPageChange && (
+          <TablePagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalCount={pagination.totalCount}
+            pageSize={pagination.limit}
+            itemLabel="buah"
+            onPageChange={onPageChange}
+            isLoading={isLoading}
+          />
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

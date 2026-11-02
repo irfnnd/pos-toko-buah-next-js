@@ -8,6 +8,7 @@ import { id } from "date-fns/locale";
 import { PenToSquare, Trash1, Reload, UserCircle1, Shield1Check } from "@tailgrids/icons";
 import { useState } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
+import { TablePagination } from "@/components/common/table-pagination";
 
 type SafeUser = Omit<User, "password">;
 
@@ -17,9 +18,24 @@ interface UserTableProps {
   onToggleStatus: (userId: string) => void;
   onDelete: (userId: string) => void;
   isLoading?: boolean;
+  pagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
-export function UserTable({ users, onEdit, onToggleStatus, onDelete, isLoading }: UserTableProps) {
+export function UserTable({
+  users,
+  onEdit,
+  onToggleStatus,
+  onDelete,
+  isLoading,
+  pagination,
+  onPageChange,
+}: UserTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<SafeUser | null>(null);
 
   const confirmDelete = () => {
@@ -140,6 +156,18 @@ export function UserTable({ users, onEdit, onToggleStatus, onDelete, isLoading }
             ))}
           </tbody>
         </table>
+
+        {pagination && onPageChange && (
+          <TablePagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalCount={pagination.totalCount}
+            pageSize={pagination.limit}
+            itemLabel="pengguna"
+            onPageChange={onPageChange}
+            isLoading={isLoading}
+          />
+        )}
       </div>
 
       {/* Delete Confirmation Modal */}

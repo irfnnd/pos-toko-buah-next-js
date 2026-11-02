@@ -8,38 +8,72 @@ import { revalidatePath } from "next/cache";
 export async function getSuppliersAction(params?: {
   search?: string;
   status?: "ACTIVE" | "INACTIVE";
+  page?: number;
+  limit?: number;
+  all?: boolean;
 }) {
   await requireAuth();
 
   const search = params?.search?.trim();
   const status = params?.status;
+  const page = Math.max(1, params?.page || 1);
+  const limit = Math.max(1, params?.limit || 10);
+  const fetchAll = params?.all ?? false;
+
+  const whereClause = {
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { code: { contains: search, mode: "insensitive" as const } },
+            { phone: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...(status ? { status } : {}),
+  };
 
   try {
-    const suppliers = await db.supplier.findMany({
-      where: {
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { code: { contains: search, mode: "insensitive" } },
-                { phone: { contains: search, mode: "insensitive" } },
-              ],
-            }
-          : {}),
-        ...(status ? { status } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: { batches: true },
+    const [totalCount, suppliers] = await Promise.all([
+      db.supplier.count({ where: whereClause }),
+      db.supplier.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        ...(fetchAll ? {} : { skip: (page - 1) * limit, take: limit }),
+        include: {
+          _count: {
+            select: { batches: true },
+          },
         },
-      },
-    });
+      }),
+    ]);
 
-    return { success: true, data: suppliers, error: undefined as string | undefined };
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+      success: true,
+      data: suppliers,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+      },
+      error: undefined as string | undefined,
+    };
   } catch (error) {
     console.error("Get suppliers error:", error);
-    return { success: false, data: [], error: "Gagal mengambil data supplier" };
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit,
+        totalCount: 0,
+        totalPages: 1,
+      },
+      error: "Gagal mengambil data supplier",
+    };
   }
 }
 

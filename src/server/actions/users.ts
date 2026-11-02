@@ -9,43 +9,77 @@ export async function getUsersAction(params?: {
   search?: string;
   role?: "ADMIN" | "KASIR";
   status?: "ACTIVE" | "INACTIVE";
+  page?: number;
+  limit?: number;
+  all?: boolean;
 }) {
   await requireAdmin();
 
   const search = params?.search?.trim();
   const role = params?.role;
   const status = params?.status;
+  const page = Math.max(1, params?.page || 1);
+  const limit = Math.max(1, params?.limit || 10);
+  const fetchAll = params?.all ?? false;
+
+  const whereClause = {
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { username: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...(role ? { role } : {}),
+    ...(status ? { status } : {}),
+  };
 
   try {
-    const users = await db.user.findMany({
-      where: {
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { username: { contains: search, mode: "insensitive" } },
-              ],
-            }
-          : {}),
-        ...(role ? { role } : {}),
-        ...(status ? { status } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        username: true,
-        role: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-      },
-    });
+    const [totalCount, users] = await Promise.all([
+      db.user.count({ where: whereClause }),
+      db.user.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        ...(fetchAll ? {} : { skip: (page - 1) * limit, take: limit }),
+        select: {
+          id: true,
+          name: true,
+          username: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+      }),
+    ]);
 
-    return { success: true, data: users, error: undefined as string | undefined };
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+      success: true,
+      data: users,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+      },
+      error: undefined as string | undefined,
+    };
   } catch (error) {
     console.error("Get users error:", error);
-    return { success: false, data: [], error: "Gagal mengambil data pengguna" };
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit,
+        totalCount: 0,
+        totalPages: 1,
+      },
+      error: "Gagal mengambil data pengguna",
+    };
   }
 }
 

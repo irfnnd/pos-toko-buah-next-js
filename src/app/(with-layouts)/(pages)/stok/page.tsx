@@ -52,6 +52,23 @@ export default function StokPage() {
   const [supplierFilter, setSupplierFilter] = useState("ALL");
   const [movementTypeFilter, setMovementTypeFilter] = useState("ALL");
 
+  // Pagination states
+  const [batchPage, setBatchPage] = useState(1);
+  const [batchPagination, setBatchPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+  });
+
+  const [movementPage, setMovementPage] = useState(1);
+  const [movementPagination, setMovementPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+  });
+
   // Modal State
   const [isStockInOpen, setIsStockInOpen] = useState(false);
   const [isStockOutOpen, setIsStockOutOpen] = useState(false);
@@ -60,12 +77,12 @@ export default function StokPage() {
   // Fetch Master Data
   useEffect(() => {
     const fetchMasters = async () => {
-      const fruitRes = await getFruitsAction({ status: "ACTIVE" });
+      const fruitRes = await getFruitsAction({ status: "ACTIVE", all: true });
       if (fruitRes.success && fruitRes.data) {
         setFruits(fruitRes.data as Fruit[]);
       }
 
-      const supRes = await getSuppliersAction({ status: "ACTIVE" });
+      const supRes = await getSuppliersAction({ status: "ACTIVE", all: true });
       if (supRes.success && supRes.data) {
         setSuppliers(supRes.data as Supplier[]);
       }
@@ -94,10 +111,15 @@ export default function StokPage() {
           status: statusFilter !== "ALL" ? (statusFilter as ExpiryStatus) : undefined,
           fruitId: fruitFilter !== "ALL" ? fruitFilter : undefined,
           supplierId: supplierFilter !== "ALL" ? supplierFilter : undefined,
+          page: batchPage,
+          limit: 10,
         });
 
         if (res.success && res.data) {
           setBatches(res.data as BatchWithRelations[]);
+          if (res.pagination) {
+            setBatchPagination(res.pagination);
+          }
         } else {
           toast.error(res.error || "Gagal mengambil data batch stok");
         }
@@ -106,10 +128,15 @@ export default function StokPage() {
           search: search || undefined,
           type: movementTypeFilter !== "ALL" ? (movementTypeFilter as MovementType) : undefined,
           fruitId: fruitFilter !== "ALL" ? fruitFilter : undefined,
+          page: movementPage,
+          limit: 10,
         });
 
         if (res.success && res.data) {
           setMovements(res.data as MovementWithRelations[]);
+          if (res.pagination) {
+            setMovementPagination(res.pagination);
+          }
         } else {
           toast.error(res.error || "Gagal mengambil riwayat pergerakan stok");
         }
@@ -126,7 +153,16 @@ export default function StokPage() {
       fetchData();
     }, 300);
     return () => clearTimeout(timer);
-  }, [activeTab, search, statusFilter, fruitFilter, supplierFilter, movementTypeFilter]);
+  }, [
+    activeTab,
+    search,
+    statusFilter,
+    fruitFilter,
+    supplierFilter,
+    movementTypeFilter,
+    batchPage,
+    movementPage,
+  ]);
 
   const handleOpenStockIn = () => {
     setIsStockInOpen(true);
@@ -230,13 +266,25 @@ export default function StokPage() {
         <>
           <StokFilter
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={(val) => {
+              setSearch(val);
+              setBatchPage(1);
+            }}
             statusFilter={statusFilter}
-            onStatusFilterChange={setStatusFilter}
+            onStatusFilterChange={(val) => {
+              setStatusFilter(val);
+              setBatchPage(1);
+            }}
             fruitFilter={fruitFilter}
-            onFruitFilterChange={setFruitFilter}
+            onFruitFilterChange={(val) => {
+              setFruitFilter(val);
+              setBatchPage(1);
+            }}
             supplierFilter={supplierFilter}
-            onSupplierFilterChange={setSupplierFilter}
+            onSupplierFilterChange={(val) => {
+              setSupplierFilter(val);
+              setBatchPage(1);
+            }}
             fruits={fruits}
             suppliers={suppliers}
             onAddStockInClick={handleOpenStockIn}
@@ -249,6 +297,8 @@ export default function StokPage() {
             onStockOutClick={(batch) => handleOpenStockOut(batch)}
             isLoading={isLoading}
             userRole={userRole}
+            pagination={batchPagination}
+            onPageChange={(p) => setBatchPage(p)}
           />
         </>
       ) : (
@@ -259,13 +309,19 @@ export default function StokPage() {
                 type="text"
                 placeholder="Cari no referensi, catatan, atau nama buah..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setMovementPage(1);
+                }}
                 className="w-full max-w-md rounded-xl border border-card-border bg-card-surface-area py-2.5 px-3.5 text-sm text-text-primary placeholder:text-text-tertiary focus:border-primary-500 focus:outline-none"
               />
 
               <select
                 value={movementTypeFilter}
-                onChange={(e) => setMovementTypeFilter(e.target.value)}
+                onChange={(e) => {
+                  setMovementTypeFilter(e.target.value);
+                  setMovementPage(1);
+                }}
                 className="rounded-xl border border-card-border bg-card-surface-area px-3 py-2.5 text-sm font-medium text-text-secondary focus:border-primary-500 focus:outline-none"
               >
                 <option value="ALL">Semua Tipe Pergerakan</option>
@@ -278,7 +334,12 @@ export default function StokPage() {
             </div>
           </div>
 
-          <StokMovementTable movements={movements} isLoading={isLoading} />
+          <StokMovementTable
+            movements={movements}
+            isLoading={isLoading}
+            pagination={movementPagination}
+            onPageChange={(p) => setMovementPage(p)}
+          />
         </>
       )}
 

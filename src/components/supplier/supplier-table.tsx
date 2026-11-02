@@ -6,6 +6,7 @@ import { Supplier } from "@prisma/client";
 import { PenToSquare, Trash1, Reload, TruckDelivery2x, Telephone1, MapMarker5 } from "@tailgrids/icons";
 import { useState } from "react";
 import { Dialog, DialogBody, DialogFooter, DialogHeader, DialogTitle } from "@/components/tailgrids/core/dialog";
+import { TablePagination } from "@/components/common/table-pagination";
 
 type SupplierWithCount = Supplier & {
   _count?: { batches: number };
@@ -17,6 +18,13 @@ interface SupplierTableProps {
   onToggleStatus: (supplierId: string) => void;
   onDelete: (supplierId: string) => void;
   isLoading?: boolean;
+  pagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
 export function SupplierTable({
@@ -25,6 +33,8 @@ export function SupplierTable({
   onToggleStatus,
   onDelete,
   isLoading,
+  pagination,
+  onPageChange,
 }: SupplierTableProps) {
   const [deleteTarget, setDeleteTarget] = useState<SupplierWithCount | null>(null);
 
@@ -163,6 +173,18 @@ export function SupplierTable({
             ))}
           </tbody>
         </table>
+
+        {pagination && onPageChange && (
+          <TablePagination
+            currentPage={pagination.page}
+            totalPages={pagination.totalPages}
+            totalCount={pagination.totalCount}
+            pageSize={pagination.limit}
+            itemLabel="supplier"
+            onPageChange={onPageChange}
+            isLoading={isLoading}
+          />
+        )}
       </div>
 
       {/* Delete Confirmation Dialog */}

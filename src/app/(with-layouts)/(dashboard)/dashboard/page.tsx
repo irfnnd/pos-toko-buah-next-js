@@ -4,7 +4,7 @@ import PosSalesChart from "./_component/pos-sales-chart";
 import PosTopProducts from "./_component/pos-top-products";
 import { getDashboardSummaryAction } from "@/server/actions/dashboard";
 
-export default async function Home() {
+export default async function DashboardPage() {
   const summary = await getDashboardSummaryAction();
 
   return (

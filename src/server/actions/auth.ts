@@ -21,6 +21,7 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
     };
   }
 
+  let targetUrl = "/dashboard";
   try {
     const user = await db.user.findUnique({
       where: { username: username.toLowerCase().trim() },
@@ -41,12 +42,14 @@ export async function loginAction(_prevState: unknown, formData: FormData) {
       name: user.name,
       role: user.role,
     });
+
+    targetUrl = user.role === "ADMIN" ? "/dashboard" : "/kasir";
   } catch (error) {
     console.error("Login error:", error);
     return { error: "Terjadi kesalahan server saat login" };
   }
 
-  redirect("/");
+  redirect(targetUrl);
 }
 
 export async function logoutAction() {

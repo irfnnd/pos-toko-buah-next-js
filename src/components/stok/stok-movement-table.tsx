@@ -5,6 +5,7 @@ import { Fruit, MovementType, StockBatch, StockMovement } from "@prisma/client";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
 import { ArrowAngularDownLeft, ArrowAngularTopRight, BoxArchive1 } from "@tailgrids/icons";
+import { TablePagination } from "@/components/common/table-pagination";
 
 type MovementWithRelations = StockMovement & {
   fruit: Fruit;
@@ -15,9 +16,21 @@ type MovementWithRelations = StockMovement & {
 interface StokMovementTableProps {
   movements: MovementWithRelations[];
   isLoading?: boolean;
+  pagination?: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  onPageChange?: (page: number) => void;
 }
 
-export function StokMovementTable({ movements, isLoading }: StokMovementTableProps) {
+export function StokMovementTable({
+  movements,
+  isLoading,
+  pagination,
+  onPageChange,
+}: StokMovementTableProps) {
   const renderTypeBadge = (type: MovementType) => {
     switch (type) {
       case MovementType.IN:
@@ -136,6 +149,18 @@ export function StokMovementTable({ movements, isLoading }: StokMovementTablePro
           })}
         </tbody>
       </table>
+
+      {pagination && onPageChange && (
+        <TablePagination
+          currentPage={pagination.page}
+          totalPages={pagination.totalPages}
+          totalCount={pagination.totalCount}
+          pageSize={pagination.limit}
+          itemLabel="pergerakan stok"
+          onPageChange={onPageChange}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

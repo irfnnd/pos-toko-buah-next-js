@@ -169,12 +169,12 @@ export default function KasirPage() {
   return (
     <div className="mt-4 space-y-4 px-2 lg:px-6">
       {/* Header */}
-      <div>
+      {/* <div>
         <h1 className="text-2xl font-semibold text-text-primary">Kasir Apps (POS)</h1>
         <p className="text-sm text-text-tertiary">
           Aplikasi kasir penjualan toko buah dengan alokasi stok otomatis berbasis FEFO
         </p>
-      </div>
+      </div> */}
 
       {/* Main 3-Column Layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-start">

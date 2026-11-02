@@ -24,9 +24,16 @@ export default function BuahPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isPending, startTransition] = useTransition();
 
-  // Filters
+  // Filters & Pagination
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 10,
+    totalCount: 0,
+    totalPages: 1,
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,10 +45,15 @@ export default function BuahPage() {
       const res = await getFruitsAction({
         search: search || undefined,
         status: statusFilter !== "ALL" ? (statusFilter as "ACTIVE" | "INACTIVE") : undefined,
+        page,
+        limit: 10,
       });
 
       if (res.success && res.data) {
         setFruits(res.data as FruitWithCount[]);
+        if (res.pagination) {
+          setPagination(res.pagination);
+        }
       } else {
         toast.error(res.error || "Gagal mengambil data buah");
       }
@@ -57,7 +69,7 @@ export default function BuahPage() {
       fetchFruits();
     }, 300);
     return () => clearTimeout(timer);
-  }, [search, statusFilter]);
+  }, [search, statusFilter, page]);
 
   const handleOpenAdd = () => {
     setEditingFruit(null);
@@ -154,9 +166,15 @@ export default function BuahPage() {
 
       <FruitFilter
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setPage(1);
+        }}
         statusFilter={statusFilter}
-        onStatusFilterChange={setStatusFilter}
+        onStatusFilterChange={(val) => {
+          setStatusFilter(val);
+          setPage(1);
+        }}
         onAddClick={handleOpenAdd}
       />
 
@@ -166,6 +184,8 @@ export default function BuahPage() {
         onToggleStatus={handleToggleStatus}
         onDelete={handleDeleteFruit}
         isLoading={isLoading}
+        pagination={pagination}
+        onPageChange={(p) => setPage(p)}
       />
 
       <FruitFormModal

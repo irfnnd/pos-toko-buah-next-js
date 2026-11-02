@@ -132,7 +132,7 @@ const pnlData = [
               />
 
               <Tooltip
-                formatter={(value: number | string | undefined) => [
+                formatter={(value: any) => [
                   formatCurrency(Number(value ?? 0)),
                   "Nominal",
                 ]}
@@ -191,7 +191,7 @@ const pnlData = [
                 </Pie>
 
                 <Tooltip
-                  formatter={(value: number | string | undefined) => [
+                  formatter={(value: any) => [
                     formatCurrency(Number(value ?? 0)),
                     "Total",
                   ]}

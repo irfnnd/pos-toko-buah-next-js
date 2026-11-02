@@ -8,37 +8,71 @@ import { revalidatePath } from "next/cache";
 export async function getFruitsAction(params?: {
   search?: string;
   status?: "ACTIVE" | "INACTIVE";
+  page?: number;
+  limit?: number;
+  all?: boolean;
 }) {
   await requireAuth();
 
   const search = params?.search?.trim();
   const status = params?.status;
+  const page = Math.max(1, params?.page || 1);
+  const limit = Math.max(1, params?.limit || 10);
+  const fetchAll = params?.all ?? false;
+
+  const whereClause = {
+    ...(search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { code: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : {}),
+    ...(status ? { status } : {}),
+  };
 
   try {
-    const fruits = await db.fruit.findMany({
-      where: {
-        ...(search
-          ? {
-              OR: [
-                { name: { contains: search, mode: "insensitive" } },
-                { code: { contains: search, mode: "insensitive" } },
-              ],
-            }
-          : {}),
-        ...(status ? { status } : {}),
-      },
-      orderBy: { createdAt: "desc" },
-      include: {
-        _count: {
-          select: { batches: true },
+    const [totalCount, fruits] = await Promise.all([
+      db.fruit.count({ where: whereClause }),
+      db.fruit.findMany({
+        where: whereClause,
+        orderBy: { createdAt: "desc" },
+        ...(fetchAll ? {} : { skip: (page - 1) * limit, take: limit }),
+        include: {
+          _count: {
+            select: { batches: true },
+          },
         },
-      },
-    });
+      }),
+    ]);
 
-    return { success: true, data: fruits, error: undefined as string | undefined };
+    const totalPages = Math.ceil(totalCount / limit) || 1;
+
+    return {
+      success: true,
+      data: fruits,
+      pagination: {
+        page,
+        limit,
+        totalCount,
+        totalPages,
+      },
+      error: undefined as string | undefined,
+    };
   } catch (error) {
     console.error("Get fruits error:", error);
-    return { success: false, data: [], error: "Gagal mengambil data buah" };
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit,
+        totalCount: 0,
+        totalPages: 1,
+      },
+      error: "Gagal mengambil data buah",
+    };
   }
 }
 

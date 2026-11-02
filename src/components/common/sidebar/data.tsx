@@ -30,10 +30,10 @@ export const NAV_DATA: NavSection[] = [
     items: [
       {
         title: "Dashboard",
-        url: "/",
+        url: "/dashboard",
         icon: <HomeIcon />,
         items: [],
-        roles: ["ADMIN", "KASIR"],
+        roles: ["ADMIN"],
       },
     ],
   },
