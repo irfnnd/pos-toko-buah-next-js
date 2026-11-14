@@ -13,18 +13,37 @@ import {
   XmarkCircle,
   BoxArchive1,
   Check,
+  LaptopPhone,
+  Send1,
 } from "@tailgrids/icons";
+import { Badge } from "@/components/tailgrids/core/badge";
+import { Button } from "@/components/tailgrids/core/button";
 import {
   getNotificationsAction,
   markAllNotificationsAsReadAction,
   markNotificationAsReadAction,
+  savePushSubscriptionAction,
+  sendTestPushNotificationAction,
 } from "@/server/actions/notification";
+import {
+  getCurrentPushSubscription,
+  isPushSupported,
+  registerServiceWorker,
+  subscribeDeviceToPush,
+  unsubscribeDeviceFromPush,
+} from "@/lib/utils/push-client";
 
 export function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Web Push State
+  const [pushSupported, setPushSupported] = useState(false);
+  const [isPushActive, setIsPushActive] = useState(false);
+  const [pushLoading, setPushLoading] = useState(false);
+
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -49,6 +68,38 @@ export function NotificationBell() {
     return () => clearInterval(interval);
   }, []);
 
+  // Initialize Service Worker & check Push status
+  useEffect(() => {
+    const initPush = async () => {
+      const supported = isPushSupported();
+      setPushSupported(supported);
+
+      if (supported) {
+        await registerServiceWorker();
+        const existingSub = await getCurrentPushSubscription();
+        setIsPushActive(Boolean(existingSub));
+
+        // Auto-heal / sync existing subscription with DB in case DB was reset or refreshed
+        if (existingSub) {
+          const subJson = existingSub.toJSON();
+          if (subJson.endpoint && subJson.keys?.p256dh && subJson.keys?.auth) {
+            savePushSubscriptionAction({
+              endpoint: subJson.endpoint,
+              keys: {
+                p256dh: subJson.keys.p256dh,
+                auth: subJson.keys.auth,
+              },
+            }).catch((err) => {
+              console.error("Auto sync push sub failed:", err);
+            });
+          }
+        }
+      }
+    };
+
+    initPush();
+  }, []);
+
   // Close dropdown on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -59,6 +110,75 @@ export function NotificationBell() {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleTogglePush = async () => {
+    setPushLoading(true);
+    try {
+      if (isPushActive) {
+        const res = await unsubscribeDeviceFromPush();
+        if (res.success) {
+          setIsPushActive(false);
+          toast.success("Notifikasi push di perangkat ini telah dinonaktifkan.");
+        } else {
+          toast.error(res.error || "Gagal menonaktifkan notifikasi.");
+        }
+      } else {
+        const res = await subscribeDeviceToPush();
+        if (res.success) {
+          setIsPushActive(true);
+          toast.success(
+            "Berhasil! Notifikasi stok akan tetap muncul di perangkat ini walaupun website ditutup."
+          );
+        } else {
+          toast.error(res.error || "Gagal mengaktifkan notifikasi perangkat.");
+        }
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Terjadi kesalahan saat memproses izin notifikasi.");
+    } finally {
+      setPushLoading(false);
+    }
+  };
+
+  const handleTestPush = async () => {
+    setPushLoading(true);
+    try {
+      const sub = await getCurrentPushSubscription();
+      let testPayload:
+        | {
+            endpoint?: string;
+            keys?: {
+              p256dh: string;
+              auth: string;
+            };
+          }
+        | undefined = undefined;
+
+      if (sub) {
+        const subJson = sub.toJSON();
+        if (subJson.endpoint && subJson.keys?.p256dh && subJson.keys?.auth) {
+          testPayload = {
+            endpoint: subJson.endpoint,
+            keys: {
+              p256dh: subJson.keys.p256dh,
+              auth: subJson.keys.auth,
+            },
+          };
+        }
+      }
+
+      const res = await sendTestPushNotificationAction(testPayload);
+      if (res.success) {
+        toast.success(res.message || "Notifikasi tes berhasil dikirim!");
+      } else {
+        toast.error(res.error || "Gagal mengirim notifikasi tes.");
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Terjadi kesalahan koneksi server.");
+    } finally {
+      setPushLoading(false);
+    }
+  };
 
   const handleMarkAsRead = async (notif: Notification) => {
     if (!notif.isRead) {
@@ -135,13 +255,66 @@ export function NotificationBell() {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400"
+                className="flex items-center gap-1 text-xs font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 cursor-pointer"
               >
                 <Check className="size-3.5" />
                 Tandai Dibaca
               </button>
             )}
           </div>
+
+          {/* Web Push Banner: Notifikasi Perangkat Latar Belakang */}
+          {pushSupported && (
+            <div className="border-b border-card-border bg-background-gray-secondary/50 p-3.5 text-xs space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 font-semibold text-text-primary">
+                  <LaptopPhone className="size-4 text-primary-600 dark:text-primary-400" />
+                  <span>Notifikasi Perangkat (Background)</span>
+                </div>
+                {isPushActive ? (
+                  <Badge color="success" size="sm">
+                    Aktif
+                  </Badge>
+                ) : (
+                  <Badge color="gray" size="sm">
+                    Nonaktif
+                  </Badge>
+                )}
+              </div>
+
+              <p className="text-[11px] text-text-tertiary leading-relaxed">
+                {isPushActive
+                  ? "Peringatan stok buah dan kadaluwarsa akan langsung muncul di perangkat Anda walaupun web sedang ditutup."
+                  : "Aktifkan agar peringatan stok buah tetap muncul di perangkat ini walaupun aplikasi tidak sedang dibuka."}
+              </p>
+
+              <div className="flex items-center gap-2 pt-1">
+                <Button
+                  size="sm"
+                  variant={isPushActive ? "danger" : "primary"}
+                  appearance={isPushActive ? "outline" : "fill"}
+                  onClick={handleTogglePush}
+                  isDisabled={pushLoading}
+                  className="text-xs px-2.5 py-1"
+                >
+                  {isPushActive ? "Nonaktifkan" : "Aktifkan di Perangkat Ini"}
+                </Button>
+
+                {isPushActive && (
+                  <Button
+                    size="sm"
+                    appearance="outline"
+                    onClick={handleTestPush}
+                    isDisabled={pushLoading}
+                    className="text-xs px-2.5 py-1 gap-1"
+                  >
+                    <Send1 className="size-3" />
+                    Kirim Tes
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* List Content */}
           <div className="max-h-80 overflow-y-auto divide-y divide-card-border scrollbar-thin">

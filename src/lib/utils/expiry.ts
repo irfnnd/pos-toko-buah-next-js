@@ -28,10 +28,12 @@ export function getExpiryStatus(
 
   const diffDays = differenceInCalendarDays(exp, today);
 
-  if (diffDays < 0) {
+  // AGENTS.md rule: tanggal_sekarang >= tanggal_batas => MELEWATI_BATAS
+  if (diffDays <= 0) {
     return ExpiryStatus.MELEWATI_BATAS;
   }
 
+  // AGENTS.md rule: tanggal_batas - warningDays <= tanggal_sekarang < tanggal_batas => SEGERA_BATAS
   if (diffDays <= warningDays) {
     return ExpiryStatus.SEGERA_BATAS;
   }

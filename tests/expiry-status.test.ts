@@ -29,6 +29,11 @@ describe("Expiry Status Business Logic Tests", () => {
     assert.strictEqual(getExpiryStatus(pastDate, 10), ExpiryStatus.MELEWATI_BATAS);
   });
 
+  test("getExpiryStatus returns MELEWATI_BATAS when expiryDate is today (tanggal_sekarang >= tanggal_batas)", () => {
+    const todayDate = new Date();
+    assert.strictEqual(getExpiryStatus(todayDate, 10), ExpiryStatus.MELEWATI_BATAS);
+  });
+
   test("getExpiryStatus returns SEGERA_BATAS when expiryDate is within warningDays", () => {
     const nearDate = addDays(new Date(), 2); // 2 days left <= 3 warning days
     assert.strictEqual(getExpiryStatus(nearDate, 10, 3), ExpiryStatus.SEGERA_BATAS);

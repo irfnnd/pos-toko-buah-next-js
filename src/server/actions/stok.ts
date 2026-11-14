@@ -6,6 +6,7 @@ import { getExpiryStatus } from "@/lib/utils/expiry";
 import { stockInSchema, stockOutSchema } from "@/lib/validations/stok";
 import { ExpiryStatus, MovementType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { checkAndDispatchStockAlertPush } from "@/lib/push";
 
 /**
  * Generate a unique batch number formatted as BATCH-YYYYMMDD-XXXX
@@ -183,6 +184,12 @@ export async function createStockInAction(formData: unknown) {
 
     revalidatePath("/stok");
     revalidatePath("/buah");
+    // Trigger push alerts after successful stock in
+    try {
+      await checkAndDispatchStockAlertPush();
+    } catch (err) {
+      console.error("Error dispatching stock alerts after stock in:", err);
+    }
     return { success: true, data: result };
   } catch (error) {
     console.error("Create stock in error:", error);
@@ -260,6 +267,12 @@ export async function createStockOutAction(formData: unknown) {
 
     revalidatePath("/stok");
     revalidatePath("/buah");
+    // Trigger push alerts after successful stock in
+    try {
+      await checkAndDispatchStockAlertPush();
+    } catch (err) {
+      console.error("Error dispatching stock alerts after stock in:", err);
+    }
     return { success: true, data: result };
   } catch (error) {
     console.error("Create stock out error:", error);
