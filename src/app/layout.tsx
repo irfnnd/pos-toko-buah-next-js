@@ -6,18 +6,22 @@ import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 
+
 const geistInter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: {
-    template: "%s | POS Toko Buah",
-    default: "POS Toko Buah - Sistem Kasir & Manajemen Toko Buah",
+  title: "POS Toko Buah",
+  description: "Sistem Point of Sale Toko Buah",
+  manifest: "/manifest.json",
+  applicationName: "POS Toko Buah",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "POS Toko Buah",
   },
-  description:
-    "Aplikasi Point of Sales (POS) dan Pengelolaan Stok Buah Berbasis Batch & Masa Simpan.",
 };
 
 export default function RootLayout({
